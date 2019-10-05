@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django.db.models import Q
 
 
 class TipoRecurso(models.Model):
@@ -28,24 +29,33 @@ class Agendamento(models.Model):
     solicitante = models.ForeignKey(User, on_delete=models.CASCADE)
     status = models.CharField(max_length=200, null=True, blank=True)
 
+    class Meta:
+        ordering = ['inicio']
+
+    @property
+    def inicio_formatado(self):
+        return self.inicio.strftime('%d/%m/%Y')
+
+    @property
+    def fim_formatado(self):
+        return self.fim.strftime('%d/%m/%Y')
+
     @property
     def periodo(self):
-        return f'{self.inicio} a {self.fim}'
+        return f'{self.inicio_formatado} a {self.fim_formatado}'
 
+    @property
     def recurso_esta_disponivel(self):
-        # agendamentos_recurso = Agendamento.objects.filter(recurso=self.recurso.id)
         agendamentos = Agendamento.objects.filter(
-            recurso=self.recurso.id,
-            inicio__gte=self.inicio,
-            # fim__lte=self.fim
+            Q(inicio__range=(self.inicio, self.fim)) |
+            Q(fim__range=(self.inicio, self.fim))
         )
-        print(agendamentos)
-        return True
-        # return agendamentos
+        esta_disponivel = len(agendamentos) == 0
+        return esta_disponivel
 
     def __str__(self):
         return f'{self.recurso} - {self.periodo}'
 
     def clean(self):
-        if not self.recurso_esta_disponivel():
-            raise ValidationError(_('O recurso não está disponível no período.'))
+        if not self.recurso_esta_disponivel:
+            raise ValidationError(_('O recurso não está disponível no período solicitado.'))
