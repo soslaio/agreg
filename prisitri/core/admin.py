@@ -17,6 +17,7 @@ class RecursoAdmin(admin.ModelAdmin):
 class AgendamentoAdmin(admin.ModelAdmin):
     list_display = ('recurso', 'periodo', 'solicitante', 'status')
     fields = ('recurso', 'inicio', 'fim')
+    list_filter = ('status',)
 
     def save_model(self, request, obj, form, change):
         obj.solicitante = request.user  # registra o solicitante logado

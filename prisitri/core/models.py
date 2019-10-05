@@ -27,7 +27,7 @@ class Agendamento(models.Model):
     inicio = models.DateTimeField()
     fim = models.DateTimeField()
     solicitante = models.ForeignKey(User, on_delete=models.CASCADE)
-    status = models.CharField(max_length=200, null=True, blank=True)
+    status = models.CharField(max_length=200, default='pendente')
 
     class Meta:
         ordering = ['inicio']
