@@ -18,6 +18,10 @@ class AgendamentoAdmin(admin.ModelAdmin):
     list_display = ('recurso', 'periodo', 'solicitante', 'status')
     fields = ('recurso', 'inicio', 'fim')
     list_filter = ('status',)
+    actions = ['aprovar']
+
+    def aprovar(self, request, queryset):
+        queryset.update(status='aprovado')
 
     def save_model(self, request, obj, form, change):
         obj.solicitante = request.user  # registra o solicitante logado
