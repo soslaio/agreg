@@ -4,10 +4,16 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
+from django.contrib.auth.models import Group
 
 
 class TipoRecurso(models.Model):
     nome = models.CharField(max_length=200)
+    grupo_aprovacao = models.ForeignKey(Group, on_delete=models.CASCADE, null=True, blank=True,
+                                        verbose_name='Grupo Gerentes')
+
+    class Meta:
+        ordering = ['nome']
 
     def __str__(self):
         return self.nome
@@ -18,6 +24,9 @@ class Recurso(models.Model):
     nome = models.CharField(max_length=200)
     descricao = models.TextField(null=True, blank=True)
     ativo = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['nome']
 
     def __str__(self):
         return self.nome

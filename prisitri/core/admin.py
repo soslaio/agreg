@@ -7,7 +7,6 @@ from django.http import HttpResponseRedirect
 
 
 class SemTodosSimpleListFilter(admin.SimpleListFilter):
-
     def choices(self, changelist):
         """Este método foi sobrescrito para poder retirar a opção 'Todos'."""
         yield {
@@ -47,9 +46,16 @@ class StatusFilter(SemTodosSimpleListFilter):
             return queryset.filter(status='pendente')
 
 
+@admin.register(TipoRecurso)
+class RecursoAdmin(admin.ModelAdmin):
+    list_display = ('nome', 'grupo_aprovacao')
+    list_filter = ('grupo_aprovacao',)
+
+
 @admin.register(Recurso)
 class RecursoAdmin(admin.ModelAdmin):
-    list_display = ('tipo', 'nome', 'descricao', 'ativo')
+    list_display = ('nome', 'tipo', 'ativo')
+    list_filter = ('tipo', 'ativo')
 
 
 @admin.register(Agendamento)
@@ -96,6 +102,3 @@ class AgendamentoAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
     html_status.short_description = 'status'
-
-
-admin.site.register(TipoRecurso)
