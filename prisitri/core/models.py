@@ -17,6 +17,7 @@ class Recurso(models.Model):
     tipo = models.ForeignKey(TipoRecurso, on_delete=models.CASCADE)
     nome = models.CharField(max_length=200)
     descricao = models.TextField(null=True, blank=True)
+    ativo = models.BooleanField(default=True)
 
     def __str__(self):
         return self.nome
