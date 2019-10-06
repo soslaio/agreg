@@ -1,0 +1,16 @@
+{% extends 'admin/change_form.html' %}
+
+{% block submit_buttons_bottom %}
+    {{ block.super }}
+    {% if original.id %}
+    <div class="submit-row">
+        {% if original.status == 'pendente' %}
+        <input type="submit" value="Aprovar" name="_aprovar">
+        {% endif %}
+
+        {% if original.status == 'aprovado' %}
+        <input type="submit" value="Cancelar aprovação" name="_cancelar">
+        {% endif %}
+    </div>
+    {% endif %}
+{% endblock %}

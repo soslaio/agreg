@@ -50,7 +50,7 @@ class Agendamento(models.Model):
         agendamentos = Agendamento.objects.filter(
             Q(inicio__range=(self.inicio, self.fim)) |
             Q(fim__range=(self.inicio, self.fim))
-        )
+        ).exclude(pk=self.id)
         esta_disponivel = len(agendamentos) == 0
         return esta_disponivel
 
