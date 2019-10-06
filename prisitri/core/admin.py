@@ -34,6 +34,13 @@ class StatusFilter(SemTodosSimpleListFilter):
         )
 
     def queryset(self, request, queryset):
+
+        if not request.user.is_superuser:
+            grupos_usuario = [g.id for g in request.user.groups.all()]
+            tipos_recurso = [t.id for t in TipoRecurso.objects.filter(grupo_aprovacao__in=grupos_usuario)]
+            recursos = [r.id for r in Recurso.objects.filter(tipo__in=tipos_recurso)]
+            queryset = Agendamento.objects.filter(recurso__in=recursos)
+
         if self.value() == 'aprovado':
             return queryset.filter(status='aprovado')
         elif self.value() == 'reprovado':
