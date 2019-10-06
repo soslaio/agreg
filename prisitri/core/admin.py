@@ -1,12 +1,49 @@
-from django.contrib import admin
-from django.contrib import messages
-from django.core.exceptions import ValidationError
-from django.utils.html import format_html
 
-# Register your models here.
+from django.contrib import admin
+from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
 from .models import TipoRecurso, Recurso, Agendamento
 
-admin.site.register(TipoRecurso)
+
+class SemTodosSimpleListFilter(admin.SimpleListFilter):
+
+    def choices(self, changelist):
+        """Este método foi sobrescrito para poder retirar a opção 'Todos'."""
+        yield {
+            'selected': self.value() is None,
+            'query_string': changelist.get_query_string(remove=[self.parameter_name]),
+            'display': _('Pendentes'),
+        }
+        for lookup, title in self.lookup_choices:
+            yield {
+                'selected': self.value() == str(lookup),
+                'query_string': changelist.get_query_string({self.parameter_name: lookup}),
+                'display': title,
+            }
+
+
+class StatusFilter(SemTodosSimpleListFilter):
+    title = _('status')
+    parameter_name = 'status'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('aprovado', 'Aprovados'),
+            ('reprovado', 'Reprovados'),
+            ('todos', 'Todos')
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'aprovado':
+            return queryset.filter(status='aprovado')
+        elif self.value() == 'reprovado':
+            return queryset.filter(status='reprovado')
+        elif self.value() == 'pendente':
+            return queryset.filter(status='pendente')
+        elif self.value() == 'todos':
+            return queryset.all()
+        elif self.value() is None:
+            return queryset.filter(status='pendente')
 
 
 @admin.register(Recurso)
@@ -14,15 +51,12 @@ class RecursoAdmin(admin.ModelAdmin):
     list_display = ('tipo', 'nome', 'descricao', 'ativo')
 
 
-# def html_status(self):
-#     return self.
-
 @admin.register(Agendamento)
 class AgendamentoAdmin(admin.ModelAdmin):
     date_hierarchy = 'inicio'
     list_display = ('recurso', 'periodo', 'solicitante', 'html_status')
     fields = ('recurso', 'inicio', 'fim')
-    list_filter = ('status',)
+    list_filter = (StatusFilter,)
     actions = ['aprovar', 'reprovar']
 
     def html_status(self, obj):
@@ -35,7 +69,6 @@ class AgendamentoAdmin(admin.ModelAdmin):
             '<img src="/static/admin/img/{}.svg" alt="True">',
             icone[obj.status]
         )
-    html_status.short_description = 'status'
 
     def aprovar(self, request, queryset):
         queryset.update(status='aprovado')
@@ -46,3 +79,8 @@ class AgendamentoAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         obj.solicitante = request.user  # registra o solicitante logado
         super().save_model(request, obj, form, change)
+
+    html_status.short_description = 'status'
+
+
+admin.site.register(TipoRecurso)
