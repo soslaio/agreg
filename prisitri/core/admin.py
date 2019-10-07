@@ -2,7 +2,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from .models import TipoRecurso, Recurso, Agendamento
+from .models import TipoRecurso, Recurso, Agendamento, Empresa
 from django.http import HttpResponseRedirect
 
 
@@ -51,6 +51,11 @@ class StatusFilter(SemTodosSimpleListFilter):
             return queryset.all()
         elif self.value() is None:
             return queryset.filter(status='pendente')
+
+
+@admin.register(Empresa)
+class EmpresaAdmin(admin.ModelAdmin):
+    list_display = ('nome',)
 
 
 @admin.register(TipoRecurso)
