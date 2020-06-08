@@ -53,6 +53,13 @@ class StatusFilter(SemTodosSimpleListFilter):
             return queryset.filter(status='pendente')
 
 
+class GenericAdmin(admin.ModelAdmin):
+    def save_model(self, request, obj, form, change):
+        obj.solicitante = request.user  # registra o solicitante logado
+        obj.empresa = 1
+        super().save_model(request, obj, form, change)
+
+
 @admin.register(Empresa)
 class EmpresaAdmin(admin.ModelAdmin):
     list_display = ('nome',)
@@ -109,8 +116,8 @@ class AgendamentoAdmin(admin.ModelAdmin):
     def reprovar(self, request, queryset):
         queryset.update(status='reprovado')
 
-    def save_model(self, request, obj, form, change):
-        obj.solicitante = request.user  # registra o solicitante logado
-        super().save_model(request, obj, form, change)
+    # def save_model(self, request, obj, form, change):
+    #     obj.solicitante = request.user  # registra o solicitante logado
+    #     super().save_model(request, obj, form, change)
 
     html_status.short_description = 'status'
