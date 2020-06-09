@@ -1,16 +1,18 @@
 
 from django.db import models
-from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext_lazy as _
-from django.db.models import Q
-from django.contrib.auth.models import Group
 
 
-class Empresa(models.Model):
+class BaseModel(models.Model):
+    ativo = models.BooleanField(default=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+
+class Empresa(BaseModel):
     nome = models.CharField(max_length=200)
-    endereco = models.CharField(max_length=200)
-    contatos = models.CharField(max_length=200)
 
     class Meta:
         ordering = ['nome']
@@ -19,19 +21,9 @@ class Empresa(models.Model):
         return self.nome
 
 
-class BaseModel(models.Model):
-    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE)
-    criado_em = models.DateTimeField(auto_now_add=True)
-    atualizado_em = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        abstract = True
-
-
 class TipoRecurso(BaseModel):
     nome = models.CharField(max_length=200)
-    grupo_aprovacao = models.ForeignKey(Group, on_delete=models.CASCADE, null=True, blank=True,
-                                        verbose_name='Grupo Gerentes', related_name='tiposrecurso')
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE)
 
     class Meta:
         ordering = ['nome']
@@ -41,52 +33,28 @@ class TipoRecurso(BaseModel):
 
 
 class Recurso(BaseModel):
-    tipo = models.ForeignKey(TipoRecurso, on_delete=models.CASCADE, related_name='recursos')
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE)
+    nome = models.CharField(max_length=200, null=True, blank=True)
+    quantidade = models.IntegerField(default=1)
+    disponibilidade_inicio = models.TimeField()
+    disponibilidade_fim = models.TimeField()
+
+
+class TipoAlocacao(BaseModel):
+    recurso = models.ForeignKey(Recurso, on_delete=models.CASCADE)
     nome = models.CharField(max_length=200)
-    descricao = models.TextField(null=True, blank=True)
-    ativo = models.BooleanField(default=True)
-
-    class Meta:
-        ordering = ['nome']
-
-    def __str__(self):
-        return self.nome
+    tempo = models.TimeField()
 
 
-class Agendamento(BaseModel):
-    recurso = models.ForeignKey(Recurso, on_delete=models.CASCADE, related_name='agendamentos')
+class Alocacao(BaseModel):
+    recurso = models.ForeignKey(Recurso, on_delete=models.CASCADE)
+    observacao = models.TextField()
+
+
+class Agenda(BaseModel):
+    tipo_alocacao = models.ForeignKey(TipoAlocacao, on_delete=models.CASCADE)
+    data = models.DateField()
     inicio = models.DateTimeField()
-    fim = models.DateTimeField()
-    solicitante = models.ForeignKey(User, on_delete=models.CASCADE, related_name='agendamentos')
-    status = models.CharField(max_length=200, default='pendente')
+    termino = models.DateTimeField()
 
-    class Meta:
-        ordering = ['inicio']
 
-    @property
-    def inicio_formatado(self):
-        return self.inicio.strftime('%d/%m/%Y')
-
-    @property
-    def fim_formatado(self):
-        return self.fim.strftime('%d/%m/%Y')
-
-    @property
-    def periodo(self):
-        return f'{self.inicio_formatado} a {self.fim_formatado}'
-
-    @property
-    def recurso_esta_disponivel(self):
-        agendamentos = Agendamento.objects.filter(
-            Q(inicio__range=(self.inicio, self.fim)) |
-            Q(fim__range=(self.inicio, self.fim))
-        ).exclude(pk=self.id)
-        esta_disponivel = len(agendamentos) == 0
-        return esta_disponivel
-
-    def __str__(self):
-        return f'{self.recurso} - {self.periodo}'
-
-    def clean(self):
-        if not self.recurso_esta_disponivel:
-            raise ValidationError(_('O recurso não está disponível no período solicitado.'))
