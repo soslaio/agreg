@@ -31,8 +31,12 @@ class Usuario(BaseModel):
         verbose_name = 'Usuário'
         verbose_name_plural = 'Usuários'
 
+    @property
+    def nome(self):
+        return self.user.get_full_name() if self.user.first_name else self.user.username
+
     def __str__(self):
-        return self.user.username
+        return self.nome
 
 
 class GrupoAprovacao(BaseModel):
@@ -103,7 +107,7 @@ class TipoAlocacao(BaseModel):
         return f'{self.tempo} {self.unidade}'
 
     def __str__(self):
-        return self.nome
+        return f'{self.nome} ({self.tempo_unidade})'
 
 
 class Recurso(BaseModel):
@@ -124,35 +128,42 @@ class Recurso(BaseModel):
         return self.tipos_alocacao.first().tipo_recurso
 
     def __str__(self):
-        return self.nome or f'{self.tipo_recurso}#{self.quantidade}'
+        return self.nome or str(self.tipo_recurso)
 
 
 class Alocacao(BaseModel):
+    recurso = models.ForeignKey(Recurso, on_delete=models.CASCADE)
+    solicitante = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    observacao = models.TextField(null=True, blank=True, verbose_name='observação')
+
+    class Meta:
+        ordering = ['recurso']
+        verbose_name = 'Alocação'
+        verbose_name_plural = 'Alocações'
+
+    @property
+    def aprovado(self):
+        """Informa se todas as agendas da alocação foram aprovadas"""
+        print(self.agenda_set.all())
+        return False
+
+    def __str__(self):
+        return f'{self.recurso} para {self.solicitante.nome}'
+
+
+class Agenda(BaseModel):
     STATUS = [
         ('aprovado', 'Aprovado'),
         ('pendente', 'Pendente'),
         ('cancelado', 'Cancelado')
     ]
-    recurso = models.ForeignKey(Recurso, on_delete=models.CASCADE)
-    solicitante = models.ForeignKey(Usuario, on_delete=models.CASCADE, null=True, blank=True)
-    observacao = models.TextField(null=True, blank=True, verbose_name='observação')
+    alocacao = models.ForeignKey(Alocacao, on_delete=models.CASCADE, verbose_name='alocação')
+    tipo_alocacao = models.ForeignKey(TipoAlocacao, on_delete=models.CASCADE, verbose_name='tipo de alocação')
+    inicio = models.DateTimeField(verbose_name='início')
+    termino = models.DateTimeField(verbose_name='término')
     status = models.CharField(max_length=200, choices=STATUS)
 
-    class Meta:
-        ordering = ['recurso', 'status']
-        verbose_name = 'Alocação'
-        verbose_name_plural = 'Alocações'
-
     def __str__(self):
-        return f'{self.recurso} para {self.solicitante.user.username}'
-
-
-class Agenda(BaseModel):
-    tipo_alocacao = models.ForeignKey(TipoAlocacao, on_delete=models.CASCADE)
-    data = models.DateField()
-    inicio = models.DateTimeField()
-    termino = models.DateTimeField()
-
-
+        return f'{self.alocacao}: {self.tipo_alocacao}'
 
 

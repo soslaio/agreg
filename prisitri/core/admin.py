@@ -1,6 +1,6 @@
 
 from django.contrib import admin
-from .models import Empresa, GrupoAprovacao, TipoRecurso, Recurso, TipoAlocacao, Alocacao, Usuario
+from .models import Empresa, GrupoAprovacao, TipoRecurso, Recurso, TipoAlocacao, Alocacao, Usuario, Agenda
 
 
 admin.site.register(Empresa)
@@ -17,7 +17,7 @@ class UsuarioAdmin(BaseAdmin):
     list_display = ('id', 'empresa', 'nome')
 
     def nome(self, obj):
-        return obj.user.get_full_name() if obj.user.first_name else obj.user.username
+        return obj.nome
 
 
 @admin.register(Recurso)
@@ -46,9 +46,23 @@ class TipoAlocacaoAdmin(BaseAdmin):
 
     def tempo_unidade(self, obj):
         return obj.tempo_unidade
+
     tempo_unidade.short_description = 'Tempo'
 
 
 @admin.register(Alocacao)
 class AlocacaoAdmin(BaseAdmin):
-    list_display = ('id', 'recurso', 'solicitante', 'status')
+    list_display = ('id', 'recurso', 'solicitante', 'aprovado')
+
+    def aprovado(self, obj):
+        return obj.aprovado
+
+    aprovado.boolean = True
+
+
+@admin.register(Agenda)
+class AgendaAdmin(BaseAdmin):
+    list_display = ('id', 'tipo_alocacao', 'inicio', 'termino')
+    list_filter = ('tipo_alocacao',)
+
+
