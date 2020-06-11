@@ -8,6 +8,7 @@ from .views import EmpresaViewSet, TipoRecursoViewSet, UsuarioViewSet
 router = routers.DefaultRouter()
 router.register('empresas', EmpresaViewSet)
 router.register('tipos_recursos', TipoRecursoViewSet)
+
 router.register('usuarios', UsuarioViewSet, basename='usuarios')
 
 corepatterns = [

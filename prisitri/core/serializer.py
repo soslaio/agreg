@@ -33,7 +33,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UsuarioSerializer(serializers.ModelSerializer):
     user = UserSerializer()
-    empresa = EmpresaSerializer()
+    empresas = EmpresaSerializer(many=True)
 
     class Meta:
         model = Usuario

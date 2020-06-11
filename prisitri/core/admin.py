@@ -2,7 +2,6 @@
 from django.contrib import admin
 from .models import Empresa, GrupoAprovacao, TipoRecurso, Recurso, TipoAlocacao, Alocacao, Usuario, Agenda
 
-
 admin.site.register(Empresa)
 
 
@@ -14,7 +13,8 @@ class BaseAdmin(admin.ModelAdmin):
 
 @admin.register(Usuario)
 class UsuarioAdmin(BaseAdmin):
-    list_display = ('id', 'empresa', 'nome')
+    list_display = ('id', 'nome')
+    filter_horizontal = ('empresas',)
 
     def nome(self, obj):
         return obj.nome

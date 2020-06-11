@@ -36,10 +36,10 @@ class Empresa(BaseModel):
 
 class Usuario(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='usuarios')
-    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE)
+    empresas = models.ManyToManyField(Empresa)
 
     class Meta:
-        ordering = ['empresa', 'user']
+        ordering = ['user']
         verbose_name = 'Usuário'
         verbose_name_plural = 'Usuários'
 
