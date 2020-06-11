@@ -6,18 +6,33 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
 from .viewsets import PermissionedViewset
 from .models import Empresa, TipoRecurso, Usuario
-from .permissions import IsObjectOwnerOrAdminUser
+from .permissions import IsObjectOwnerOrAdminUser, IsRelatedToCompanyOrAdminUser
 from .serializer import EmpresaSerializer, TipoRecursoSerializer, UsuarioSerializer
 
 
-class EmpresaViewSet(viewsets.ModelViewSet):
-    queryset = Empresa.objects.all()
-    serializer_class = EmpresaSerializer
+class EmpresaViewSet(PermissionedViewset):
+    permission_classes_by_action = {
+        'list': [IsAdminUser],
+        'retrieve': [IsRelatedToCompanyOrAdminUser]
+    }
+
+    def list(self, request):
+        queryset = Empresa.objects.all()
+        serializer = EmpresaSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        empresas = Empresa.objects.all()
+        empresa = get_object_or_404(empresas, pk=pk)
+        self.check_object_permissions(self.request, empresa)
+        serializer = EmpresaSerializer(empresa)
+        return Response(serializer.data)
 
 
-class TipoRecursoViewSet(viewsets.ModelViewSet):
+class TipoRecursoViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = TipoRecurso.objects.all()
     serializer_class = TipoRecursoSerializer
+    permission_classes = [IsAdminUser]
 
 
 class UsuarioViewSet(PermissionedViewset):
