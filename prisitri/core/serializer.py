@@ -1,7 +1,7 @@
 
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Empresa, TipoRecurso, Usuario
+from .models import Empresa, TipoRecurso, Usuario, GrupoAprovacao
 
 
 class EmpresaSerializer(serializers.ModelSerializer):
@@ -10,7 +10,16 @@ class EmpresaSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class GrupoAprovacaoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GrupoAprovacao
+        fields = '__all__'
+
+
 class TipoRecursoSerializer(serializers.ModelSerializer):
+    empresa = EmpresaSerializer()
+    grupo = GrupoAprovacaoSerializer()
+
     class Meta:
         model = TipoRecurso
         fields = '__all__'

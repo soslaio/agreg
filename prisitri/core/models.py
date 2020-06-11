@@ -6,10 +6,22 @@ from django.contrib.auth.models import User
 class BaseModel(models.Model):
     ativo = models.BooleanField(default=True)
     criado_em = models.DateTimeField(auto_now_add=True)
+    criado_por = models.ForeignKey(User, on_delete=models.CASCADE)
     atualizado_em = models.DateTimeField(auto_now=True)
 
     class Meta:
         abstract = True
+
+    def save(self, *args, **kwargs):
+        print('>>>>>>', args)
+        print('>>>>>>', kwargs)
+        # user = Token.objects.get(key=self.token_responsavel).user
+        # usuario = Usuario.objects.get(user=user)
+        # self.responsavel = usuario
+        # self.unidade_atividade = usuario.unidade
+        # self.criado_por =
+
+        super().save(*args, **kwargs)
 
 
 class Empresa(BaseModel):
@@ -23,7 +35,7 @@ class Empresa(BaseModel):
 
 
 class Usuario(BaseModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='usuarios')
     empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE)
 
     class Meta:
