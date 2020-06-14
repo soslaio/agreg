@@ -1,123 +1,83 @@
 
 from django.contrib import admin
-from django.utils.html import format_html
-from django.utils.translation import gettext_lazy as _
-from .models import TipoRecurso, Recurso, Agendamento, Empresa
-from django.http import HttpResponseRedirect
+from .models import Company, ApprovalGroup, ResourceType, Resource, TipoAlocacao, Alocacao, ExtendedUser, Agenda
 
 
-class SemTodosSimpleListFilter(admin.SimpleListFilter):
-    def choices(self, changelist):
-        """Este método foi sobrescrito para poder retirar a opção 'Todos'."""
-        yield {
-            'selected': self.value() is None,
-            'query_string': changelist.get_query_string(remove=[self.parameter_name]),
-            'display': _('Pendentes'),
-        }
-        for lookup, title in self.lookup_choices:
-            yield {
-                'selected': self.value() == str(lookup),
-                'query_string': changelist.get_query_string({self.parameter_name: lookup}),
-                'display': title,
-            }
+class BaseAdmin(admin.ModelAdmin):
+    def get_exclude(self, request, obj=None):
+        self.exclude = ['owner']
+        if not obj:
+            self.exclude.append('active')
+        return self.exclude
+
+    def get_readonly_fields(self, request, obj=None):
+        self.readonly_fields = ('id',)
+        if obj:
+            if hasattr(obj, 'owner'):
+                self.readonly_fields += ('owner',)
+        return self.readonly_fields
 
 
-class StatusFilter(SemTodosSimpleListFilter):
-    title = _('status')
-    parameter_name = 'status'
-
-    def lookups(self, request, model_admin):
-        return (
-            ('aprovado', 'Aprovados'),
-            ('reprovado', 'Reprovados'),
-            ('todos', 'Todos')
-        )
-
-    def queryset(self, request, queryset):
-
-        if not request.user.is_superuser:
-            grupos_usuario = [g.id for g in request.user.groups.all()]
-            tipos_recurso = [t.id for t in TipoRecurso.objects.filter(grupo_aprovacao__in=grupos_usuario)]
-            recursos = [r.id for r in Recurso.objects.filter(tipo__in=tipos_recurso)]
-            queryset = Agendamento.objects.filter(recurso__in=recursos)
-
-        if self.value() == 'aprovado':
-            return queryset.filter(status='aprovado')
-        elif self.value() == 'reprovado':
-            return queryset.filter(status='reprovado')
-        elif self.value() == 'pendente':
-            return queryset.filter(status='pendente')
-        elif self.value() == 'todos':
-            return queryset.all()
-        elif self.value() is None:
-            return queryset.filter(status='pendente')
+@admin.register(Company)
+class CompanyAdmin(BaseAdmin):
+    list_display = ('id', 'name', 'active')
 
 
-class GenericAdmin(admin.ModelAdmin):
-    def save_model(self, request, obj, form, change):
-        obj.solicitante = request.user  # registra o solicitante logado
-        obj.empresa = 1
-        super().save_model(request, obj, form, change)
+@admin.register(ExtendedUser)
+class ExtendedUserAdmin(BaseAdmin):
+    list_display = ('id', 'nome')
+    filter_horizontal = ('companies',)
+
+    def nome(self, obj):
+        return obj.nome
 
 
-@admin.register(Empresa)
-class EmpresaAdmin(admin.ModelAdmin):
-    list_display = ('nome',)
+@admin.register(Resource)
+class ResourceAdmin(BaseAdmin):
+    list_display = ('id', 'name', 'tipo_recurso', 'company', 'quantity')
+
+    def tipo_recurso(self, obj):
+        return obj.tipo_recurso
 
 
-@admin.register(TipoRecurso)
-class RecursoAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'grupo_aprovacao')
-    list_filter = ('grupo_aprovacao',)
+@admin.register(ApprovalGroup)
+class ApprovalGroupAdmin(BaseAdmin):
+    list_display = ('id', 'name', 'company')
 
 
-@admin.register(Recurso)
-class RecursoAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'tipo', 'ativo')
-    list_filter = ('tipo', 'ativo')
+@admin.register(ResourceType)
+class ResourceTypeAdmin(BaseAdmin):
+    list_display = ('name', 'grupo', 'company')
+    list_filter = ('natureza', 'grupo', 'company')
 
 
-@admin.register(Agendamento)
-class AgendamentoAdmin(admin.ModelAdmin):
-    change_form_template = "agendamento_changeform.html"
-    date_hierarchy = 'inicio'
-    list_display = ('recurso', 'periodo', 'solicitante', 'html_status')
-    fields = ('recurso', 'inicio', 'fim')
-    list_filter = (StatusFilter,)
-    actions = ['aprovar', 'reprovar']
+@admin.register(TipoAlocacao)
+class TipoAlocacaoAdmin(BaseAdmin):
+    list_display = ('name', 'get_tipo_recurso', 'tempo_unidade')
+    list_filter = ('tipo_recurso',)
 
-    def html_status(self, obj):
-        icone = {
-            'pendente': 'icon-unknown',
-            'aprovado': 'icon-yes',
-            'reprovado': 'icon-no'
-        }
-        return format_html(
-            '<img src="/static/admin/img/{}.svg" alt="True">',
-            icone[obj.status]
-        )
+    def get_tipo_recurso(self, obj):
+        return obj.tipo_recurso.name
+    get_tipo_recurso.short_description = 'Tipo de produto'
 
-    def response_change(self, request, obj):
-        if "_aprovar" in request.POST:
-            obj.status = 'aprovado'
-            obj.save()
-            self.message_user(request, "O agendamento foi aprovado com sucesso.")
-            return HttpResponseRedirect(".")
-        if "_cancelar" in request.POST:
-            obj.status = 'reprovado'
-            obj.save()
-            self.message_user(request, "O agendamento foi cancelado com sucesso.")
-            return HttpResponseRedirect(".")
-        return super().response_change(request, obj)
+    def tempo_unidade(self, obj):
+        return obj.tempo_unidade
+    tempo_unidade.short_description = 'Tempo'
 
-    def aprovar(self, request, queryset):
-        queryset.update(status='aprovado')
 
-    def reprovar(self, request, queryset):
-        queryset.update(status='reprovado')
+@admin.register(Alocacao)
+class AlocacaoAdmin(BaseAdmin):
+    list_display = ('id', 'recurso', 'solicitante', 'aprovado')
 
-    # def save_model(self, request, obj, form, change):
-    #     obj.solicitante = request.user  # registra o solicitante logado
-    #     super().save_model(request, obj, form, change)
+    def aprovado(self, obj):
+        return obj.aprovado
 
-    html_status.short_description = 'status'
+    aprovado.boolean = True
+
+
+@admin.register(Agenda)
+class AgendaAdmin(BaseAdmin):
+    list_display = ('id', 'tipo_alocacao', 'inicio', 'termino')
+    list_filter = ('tipo_alocacao',)
+
+
