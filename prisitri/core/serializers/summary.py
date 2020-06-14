@@ -1,13 +1,18 @@
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from ..models import Company, ResourceType, ExtendedUser, ApprovalGroup, ScheduleType
+from ..models import Company, ResourceType, ExtendedUser, ApprovalGroup, ScheduleType, Resource
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSummarySerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ('id', 'username', 'first_name', 'last_name', 'email')
+        fields = ('id', 'username', 'full_name', 'email')
+
+    def get_full_name(self, obj):
+        return obj.get_full_name()
 
 
 class CompanySummarySerializer(serializers.ModelSerializer):
@@ -18,7 +23,7 @@ class CompanySummarySerializer(serializers.ModelSerializer):
 
 class ExtendedUserSummarySerializer(serializers.ModelSerializer):
     id = serializers.UUIDField()
-    user = UserSerializer()
+    user = UserSummarySerializer()
 
     class Meta:
         model = ExtendedUser
@@ -34,10 +39,16 @@ class ResourceTypeSummarySerializer(serializers.ModelSerializer):
 class ScheduleTypeSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = ScheduleType
-        fields = ('id', 'name', 'tempo', 'unidade', 'url')
+        fields = ('id', 'name', 'time', 'unit', 'url')
 
 
 class ApprovalGroupSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = ApprovalGroup
-        fields = ('id', 'nome', 'url')
+        fields = ('id', 'name', 'url')
+
+
+class ResourceSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Resource
+        fields = ('id', 'name', 'url')

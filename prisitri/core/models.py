@@ -14,7 +14,7 @@ class ExtendedUser(models.Model):
     companies = models.ManyToManyField('Company', blank=True, verbose_name='empresas')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    active = models.BooleanField(default=True, verbose_name='ativo')
+    is_active = models.BooleanField(default=True, verbose_name='ativo')
 
     class Meta:
         ordering = ['user']
@@ -35,7 +35,7 @@ class BaseModel(models.Model):
                               verbose_name='proprietário')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    active = models.BooleanField(default=True, verbose_name='ativo')
+    is_active = models.BooleanField(default=True, verbose_name='ativo')
 
     class Meta:
         abstract = True
@@ -78,18 +78,22 @@ class ResourceType(BaseModel):
     company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name='empresa')
     name = models.CharField(max_length=200)
     description = models.TextField(null=True, blank=True, verbose_name='descrição')
-    natureza = models.CharField(max_length=200, choices=NATUREZAS)
-    grupo = models.ForeignKey(ApprovalGroup, on_delete=models.CASCADE, null=True, blank=True,
-                              verbose_name='Grupo de aprovação')
+    nature = models.CharField(max_length=200, choices=NATUREZAS)
+    approval_group = models.ForeignKey(ApprovalGroup, on_delete=models.CASCADE, null=True, blank=True,
+                                       verbose_name='Grupo de aprovação')
 
     class Meta:
-        ordering = ['name', 'grupo', 'company']
+        ordering = ['name', 'approval_group', 'company']
         verbose_name = 'Tipo de recurso'
         verbose_name_plural = 'Tipos de recursos'
 
     @property
     def necessita_aprovacao(self):
         return self.grupo is not None
+
+    @property
+    def resources(self):
+        return self.resource_set.all()
 
     def __str__(self):
         return f'{self.name} ({self.company})'
@@ -104,10 +108,10 @@ class ScheduleType(BaseModel):
         ('meses', 'Meses'),
         ('anos', 'Anos')
     ]
-    tipo_recurso = models.ForeignKey(ResourceType, on_delete=models.CASCADE)
+    resource_type = models.ForeignKey(ResourceType, on_delete=models.CASCADE)
     name = models.CharField(max_length=200)
-    tempo = models.IntegerField()
-    unidade = models.CharField(max_length=200, choices=UNIDADES, default='minutos')
+    time = models.IntegerField()
+    unit = models.CharField(max_length=200, choices=UNIDADES, default='minutos')
     description = models.TextField(null=True, blank=True, verbose_name='descrição')
 
     class Meta:
@@ -116,27 +120,28 @@ class ScheduleType(BaseModel):
         verbose_name_plural = 'Tipos de alocação'
 
     @property
-    def tempo_unidade(self):
-        if self.tempo == 1:
-            if self.unidade != 'meses':
-                return f'{self.tempo} {self.unidade[:-1]}'
+    def time_unit(self):
+        if self.time == 1:
+            if self.unit != 'meses':
+                return f'{self.time} {self.unit[:-1]}'
             else:
-                return f'{self.tempo} mês'
-        return f'{self.tempo} {self.unidade}'
+                return f'{self.time} mês'
+        return f'{self.time} {self.unit}'
 
     def __str__(self):
-        return f'{self.nome} ({self.tempo_unidade})'
+        return f'{self.name} ({self.time_unit})'
 
 
 class Resource(BaseModel):
+    resource_type = models.ForeignKey(ResourceType, models.CASCADE, verbose_name='tipo')
     name = models.CharField(max_length=200, null=True, blank=True,
                             help_text='No caso de recursos humanos, é o nome do profissional.')
     description = models.TextField(null=True, blank=True, verbose_name='descrição')
     quantity = models.IntegerField(default=1, verbose_name='quantidade')
     company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name='empresa')
-    tipos_alocacao = models.ManyToManyField(ScheduleType, verbose_name='tipos de alocação')
-    disponibilidade_inicio = models.TimeField()
-    disponibilidade_fim = models.TimeField()
+    schedule_types = models.ManyToManyField(ScheduleType, verbose_name='tipos de alocação')
+    available_from = models.TimeField()
+    available_until = models.TimeField()
 
     class Meta:
         ordering = ['name']
@@ -144,10 +149,10 @@ class Resource(BaseModel):
 
     @property
     def tipo_recurso(self):
-        return self.tipos_alocacao.first().tipo_recurso
+        return self.schedule_types.first().resource_type
 
     def __str__(self):
-        return self.name or str(self.tipo_recurso)
+        return self.name or self.resource_type.name
 
 
 class Order(BaseModel):

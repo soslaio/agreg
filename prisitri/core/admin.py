@@ -20,7 +20,7 @@ class BaseAdmin(admin.ModelAdmin):
 
 @admin.register(Company)
 class CompanyAdmin(BaseAdmin):
-    list_display = ('id', 'name', 'active')
+    list_display = ('id', 'name', 'is_active')
 
 
 @admin.register(ExtendedUser)
@@ -35,6 +35,7 @@ class ExtendedUserAdmin(BaseAdmin):
 @admin.register(Resource)
 class ResourceAdmin(BaseAdmin):
     list_display = ('id', 'name', 'tipo_recurso', 'company', 'quantity')
+    filter_horizontal = ('schedule_types',)
 
     def tipo_recurso(self, obj):
         return obj.tipo_recurso
@@ -47,22 +48,22 @@ class ApprovalGroupAdmin(BaseAdmin):
 
 @admin.register(ResourceType)
 class ResourceTypeAdmin(BaseAdmin):
-    list_display = ('name', 'grupo', 'company')
-    list_filter = ('natureza', 'grupo', 'company')
+    list_display = ('name', 'approval_group', 'company')
+    list_filter = ('nature', 'approval_group', 'company')
 
 
 @admin.register(ScheduleType)
 class ScheduleTypeAdmin(BaseAdmin):
-    list_display = ('name', 'get_tipo_recurso', 'tempo_unidade')
-    list_filter = ('tipo_recurso',)
+    list_display = ('name', 'get_resource_type', 'time_unit')
+    list_filter = ('resource_type',)
 
-    def get_tipo_recurso(self, obj):
-        return obj.tipo_recurso.name
-    get_tipo_recurso.short_description = 'Tipo de produto'
+    def get_resource_type(self, obj):
+        return obj.resource_type.name
+    get_resource_type.short_description = 'Tipo de produto'
 
-    def tempo_unidade(self, obj):
-        return obj.tempo_unidade
-    tempo_unidade.short_description = 'Tempo'
+    def time_unit(self, obj):
+        return obj.time_unit
+    time_unit.short_description = 'Tempo'
 
 
 @admin.register(Order)

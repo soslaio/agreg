@@ -4,11 +4,17 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
 from .viewsets import PermissionedViewset
-from .models import Company, ResourceType, ExtendedUser, Resource, ScheduleType
+from .models import Company, ResourceType, ExtendedUser, Resource, ScheduleType, ApprovalGroup
 from .permissions import IsObjectOwnerOrAdminUser, IsRelatedToCompanyOrAdminUser
 from .serializers import (CompanySerializer, CompanySummarySerializer, ResourceTypeSummarySerializer,
                           ExtendedUserSerializer, ExtendedUserSummarySerializer, ResourceSerializer,
-                          ResourceSummarySerializer, ScheduleTypeSummarySerializer, ScheduleTypeSerializer)
+                          ResourceSummarySerializer, ScheduleTypeSummarySerializer, ScheduleTypeSerializer,
+                          ResourceTypeSerializer, ApprovalGroupSummarySerializer)
+
+
+class ApprovalGroupViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = ApprovalGroup.objects.all()
+    serializer_class = ApprovalGroupSummarySerializer
 
 
 class CompanyViewSet(PermissionedViewset):
@@ -30,10 +36,17 @@ class CompanyViewSet(PermissionedViewset):
         return Response(serializer.data)
 
 
-class ResourceTypeViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = ResourceType.objects.all()
-    serializer_class = ResourceTypeSummarySerializer
-    permission_classes = [IsAdminUser]
+class ResourceTypeViewSet(PermissionedViewset):
+    def list(self, request):
+        resource_types = ResourceType.objects.all()
+        serializer = ResourceTypeSummarySerializer(resource_types, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        resource_types = ResourceType.objects.all()
+        resource_type = get_object_or_404(resource_types, pk=pk)
+        serializer = ResourceTypeSerializer(resource_type, context={'request': request})
+        return Response(serializer.data)
 
 
 class ScheduleTypeViewSet(PermissionedViewset):

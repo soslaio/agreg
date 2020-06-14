@@ -1,8 +1,15 @@
 
+from django.contrib.auth.models import User
 from rest_framework import serializers
 from ..models import Company, ResourceType, ExtendedUser, ApprovalGroup, Resource, ScheduleType
 from .summary import (CompanySummarySerializer, ExtendedUserSummarySerializer, ResourceTypeSummarySerializer,
-                      ScheduleTypeSummarySerializer, ApprovalGroupSummarySerializer, UserSerializer)
+                      ScheduleTypeSummarySerializer, ApprovalGroupSummarySerializer, ResourceSummarySerializer)
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        exclude = ('password',)
 
 
 class ExtendedUserSerializer(serializers.ModelSerializer):
@@ -24,14 +31,28 @@ class ScheduleTypeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ResourceSummarySerializer(serializers.ModelSerializer):
+class ResourceTypeSerializer(serializers.ModelSerializer):
+    owner = ExtendedUserSummarySerializer()
+    company = CompanySummarySerializer()
+    approval_group = ApprovalGroupSummarySerializer()
+    resources = serializers.SerializerMethodField()
+
     class Meta:
-        model = Resource
-        fields = ('id', 'name', 'url')
+        model = ResourceType
+        fields = '__all__'
+
+    def get_resources(self, obj):
+        resources = obj.resource_set.all()
+        request = self.context['request']
+        serializer = ResourceSummarySerializer(resources, many=True, context={'request': request})
+        return serializer.data
 
 
 class ResourceSerializer(serializers.ModelSerializer):
-    tipos_alocacao = ScheduleTypeSummarySerializer(many=True)
+    schedule_types = ScheduleTypeSummarySerializer(many=True)
+    company = CompanySummarySerializer()
+    resource_type = ResourceTypeSummarySerializer()
+    owner = ExtendedUserSummarySerializer()
 
     class Meta:
         model = Resource
