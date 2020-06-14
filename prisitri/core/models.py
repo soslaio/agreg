@@ -1,42 +1,20 @@
 
+import uuid
 from django.db import models
+from django.dispatch import receiver
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+
+exposed_request = None
 
 
-class BaseModel(models.Model):
-    ativo = models.BooleanField(default=True)
-    criado_em = models.DateTimeField(auto_now_add=True)
-    criado_por = models.ForeignKey(User, on_delete=models.CASCADE)
-    atualizado_em = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        abstract = True
-
-    def save(self, *args, **kwargs):
-        print('>>>>>>', args)
-        print('>>>>>>', kwargs)
-        # user = Token.objects.get(key=self.token_responsavel).user
-        # usuario = Usuario.objects.get(user=user)
-        # self.responsavel = usuario
-        # self.unidade_atividade = usuario.unidade
-        # self.criado_por =
-
-        super().save(*args, **kwargs)
-
-
-class Empresa(BaseModel):
-    nome = models.CharField(max_length=200)
-
-    class Meta:
-        ordering = ['nome']
-
-    def __str__(self):
-        return self.nome
-
-
-class Usuario(BaseModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='usuarios')
-    empresas = models.ManyToManyField(Empresa)
+class ExtendedUser(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='usuarios', verbose_name='usuário do sistema')
+    companies = models.ManyToManyField('Empresa', blank=True, verbose_name='empresas')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    active = models.BooleanField(default=True, verbose_name='ativo')
 
     class Meta:
         ordering = ['user']
@@ -51,33 +29,60 @@ class Usuario(BaseModel):
         return self.nome
 
 
-class GrupoAprovacao(BaseModel):
-    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE)
-    nome = models.CharField(max_length=200)
+class BaseModel(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    owner = models.ForeignKey('ExtendedUser', on_delete=models.CASCADE, null=True, blank=True,
+                              verbose_name='proprietário')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    active = models.BooleanField(default=True, verbose_name='ativo')
 
     class Meta:
-        ordering = ['nome']
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        extendeduser = ExtendedUser.objects.get(user__id=exposed_request.user.id)
+        self.owner = extendeduser
+        super().save(*args, **kwargs)
+
+
+class Empresa(BaseModel):
+    name = models.CharField(max_length=200)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
+class GrupoAprovacao(BaseModel):
+    company = models.ForeignKey(Empresa, on_delete=models.CASCADE, verbose_name='empresa')
+    name = models.CharField(max_length=200, verbose_name='nome')
+
+    class Meta:
+        ordering = ['name']
         verbose_name = 'Grupo de aprovação'
         verbose_name_plural = 'Grupos de aprovação'
 
     def __str__(self):
-        return self.nome
+        return self.name
 
 
 class TipoRecurso(BaseModel):
     NATUREZAS = [
-        ('humanos', 'Humanos'),
-        ('materiais', 'Materiais')
+        ('humanos', 'Recursos Humanos'),
+        ('materiais', 'Recursos Materiais')
     ]
-    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE)
-    nome = models.CharField(max_length=200)
-    descricao = models.TextField(null=True, blank=True, verbose_name='descrição')
+    company = models.ForeignKey(Empresa, on_delete=models.CASCADE)
+    name = models.CharField(max_length=200)
+    description = models.TextField(null=True, blank=True, verbose_name='descrição')
     natureza = models.CharField(max_length=200, choices=NATUREZAS)
     grupo = models.ForeignKey(GrupoAprovacao, on_delete=models.CASCADE, null=True, blank=True,
                               verbose_name='Grupo de aprovação')
 
     class Meta:
-        ordering = ['nome']
+        ordering = ['name', 'grupo', 'company']
         verbose_name = 'Tipo de recurso'
         verbose_name_plural = 'Tipos de recursos'
 
@@ -86,7 +91,7 @@ class TipoRecurso(BaseModel):
         return self.grupo is not None
 
     def __str__(self):
-        return self.nome
+        return f'{self.name} ({self.company})'
 
 
 class TipoAlocacao(BaseModel):
@@ -102,10 +107,10 @@ class TipoAlocacao(BaseModel):
     nome = models.CharField(max_length=200)
     tempo = models.IntegerField()
     unidade = models.CharField(max_length=200, choices=UNIDADES, default='minutos')
-    descricao = models.TextField(null=True, blank=True, verbose_name='descrição')
+    description = models.TextField(null=True, blank=True, verbose_name='descrição')
 
     class Meta:
-        ordering = ['tipo_recurso', 'nome']
+        ordering = ['nome']
         verbose_name = 'Tipo de alocação'
         verbose_name_plural = 'Tipos de alocação'
 
@@ -123,29 +128,29 @@ class TipoAlocacao(BaseModel):
 
 
 class Recurso(BaseModel):
-    nome = models.CharField(max_length=200, null=True, blank=True,
+    name = models.CharField(max_length=200, null=True, blank=True,
                             help_text='No caso de recursos humanos, é o nome do profissional.')
-    descricao = models.TextField(null=True, blank=True, verbose_name='descrição')
-    quantidade = models.IntegerField(default=1)
-    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE)
+    description = models.TextField(null=True, blank=True, verbose_name='descrição')
+    quantity = models.IntegerField(default=1, verbose_name='quantidade')
+    company = models.ForeignKey(Empresa, on_delete=models.CASCADE)
     tipos_alocacao = models.ManyToManyField(TipoAlocacao, verbose_name='tipos de alocação')
     disponibilidade_inicio = models.TimeField()
     disponibilidade_fim = models.TimeField()
 
     class Meta:
-        ordering = ['nome']
+        ordering = ['name']
 
     @property
     def tipo_recurso(self):
         return self.tipos_alocacao.first().tipo_recurso
 
     def __str__(self):
-        return self.nome or str(self.tipo_recurso)
+        return self.name or str(self.tipo_recurso)
 
 
 class Alocacao(BaseModel):
     recurso = models.ForeignKey(Recurso, on_delete=models.CASCADE)
-    solicitante = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    solicitante = models.ForeignKey(ExtendedUser, on_delete=models.CASCADE, related_name='alocacoes')
     observacao = models.TextField(null=True, blank=True, verbose_name='observação')
 
     class Meta:
@@ -177,5 +182,13 @@ class Agenda(BaseModel):
 
     def __str__(self):
         return f'{self.alocacao}: {self.tipo_alocacao}'
+
+
+@receiver(post_save, sender=User)
+def create_extendeduser(sender, instance, created, **kwargs):
+    if created:
+        ExtendedUser.objects.create(user=instance)
+
+
 
 

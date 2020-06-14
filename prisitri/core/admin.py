@@ -1,20 +1,31 @@
 
 from django.contrib import admin
-from .models import Empresa, GrupoAprovacao, TipoRecurso, Recurso, TipoAlocacao, Alocacao, Usuario, Agenda
-
-admin.site.register(Empresa)
+from .models import Empresa, GrupoAprovacao, TipoRecurso, Recurso, TipoAlocacao, Alocacao, ExtendedUser, Agenda
 
 
 class BaseAdmin(admin.ModelAdmin):
     def get_exclude(self, request, obj=None):
+        exclude = ['owner']
         if not obj:
-            return ('ativo',)
+            exclude.append('active')
+        return exclude
+
+    def get_readonly_fields(self, request, obj=None):
+        self.readonly_fields = ('id',)
+        if obj:
+            self.readonly_fields += ('owner',)
+        return self.readonly_fields
 
 
-@admin.register(Usuario)
+@admin.register(Empresa)
+class EmpresaAdmin(BaseAdmin):
+    list_display = ('id', 'name', 'active')
+
+
+@admin.register(ExtendedUser)
 class UsuarioAdmin(BaseAdmin):
     list_display = ('id', 'nome')
-    filter_horizontal = ('empresas',)
+    filter_horizontal = ('companies',)
 
     def nome(self, obj):
         return obj.nome
@@ -22,7 +33,7 @@ class UsuarioAdmin(BaseAdmin):
 
 @admin.register(Recurso)
 class RecursoAdmin(BaseAdmin):
-    list_display = ('id', 'nome', 'tipo_recurso', 'empresa', 'quantidade')
+    list_display = ('id', 'name', 'tipo_recurso', 'company', 'quantity')
 
     def tipo_recurso(self, obj):
         return obj.tipo_recurso
@@ -30,23 +41,26 @@ class RecursoAdmin(BaseAdmin):
 
 @admin.register(GrupoAprovacao)
 class GrupoAprovacaoAdmin(BaseAdmin):
-    list_display = ('id', 'nome', 'empresa')
+    list_display = ('id', 'name', 'company')
 
 
 @admin.register(TipoRecurso)
 class TipoRecursoAdmin(BaseAdmin):
-    list_display = ('id', 'nome', 'grupo')
-    list_filter = ('natureza', 'grupo', 'empresa')
+    list_display = ('name', 'grupo', 'company')
+    list_filter = ('natureza', 'grupo', 'company')
 
 
 @admin.register(TipoAlocacao)
 class TipoAlocacaoAdmin(BaseAdmin):
-    list_display = ('id', 'tipo_recurso', 'nome', 'tempo_unidade')
+    list_display = ('nome', 'get_tipo_recurso', 'tempo_unidade')
     list_filter = ('tipo_recurso',)
+
+    def get_tipo_recurso(self, obj):
+        return obj.tipo_recurso.name
+    get_tipo_recurso.short_description = 'Tipo de produto'
 
     def tempo_unidade(self, obj):
         return obj.tempo_unidade
-
     tempo_unidade.short_description = 'Tempo'
 
 
