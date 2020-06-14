@@ -1,7 +1,7 @@
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Empresa, TipoRecurso, ExtendedUser, GrupoAprovacao
+from .models import Company, TipoRecurso, ExtendedUser, GrupoAprovacao
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -10,10 +10,16 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'first_name', 'last_name', 'email')
 
 
+class CompanySummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = ('id', 'name', 'url')
+
+
 class ExtendedUserSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField()
     user = UserSerializer()
-    # empresas = CompanySummarySerializer(many=True)
+    companies = CompanySummarySerializer(many=True)
 
     class Meta:
         model = ExtendedUser
@@ -29,23 +35,18 @@ class ExtendedUserSummarySerializer(serializers.ModelSerializer):
         fields = ('id', 'user', 'url')
 
 
-class CompanySummarySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Empresa
-        fields = ('id', 'name', 'url')
-
-
 class CompanySerializer(serializers.ModelSerializer):
-    # owner = ExtendedUserSummarySerializer(default=None)
+    owner = ExtendedUserSummarySerializer()
     resource_types = serializers.SerializerMethodField()
 
     class Meta:
-        model = Empresa
+        model = Company
         fields = '__all__'
 
     def get_resource_types(self, obj):
         types = obj.tiporecurso_set.all()
-        serializer = ResourceTypeSummarySerializer(types, many=True)
+        request = self.context['request']
+        serializer = ResourceTypeSummarySerializer(types, many=True, context={'request': request})
         return serializer.data
 
 
@@ -58,7 +59,7 @@ class GrupoAprovacaoSerializer(serializers.ModelSerializer):
 class ApprovalGroupSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = GrupoAprovacao
-        fields = ('id', 'nome')
+        fields = ('id', 'nome', 'url')
 
 
 class TipoRecursoSerializer(serializers.ModelSerializer):
@@ -72,7 +73,7 @@ class TipoRecursoSerializer(serializers.ModelSerializer):
 class ResourceTypeSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = TipoRecurso
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'url')
 
 
 

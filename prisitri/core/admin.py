@@ -1,6 +1,6 @@
 
 from django.contrib import admin
-from .models import Empresa, GrupoAprovacao, TipoRecurso, Recurso, TipoAlocacao, Alocacao, ExtendedUser, Agenda
+from .models import Company, GrupoAprovacao, TipoRecurso, Recurso, TipoAlocacao, Alocacao, ExtendedUser, Agenda
 
 
 class BaseAdmin(admin.ModelAdmin):
@@ -18,7 +18,7 @@ class BaseAdmin(admin.ModelAdmin):
         return self.readonly_fields
 
 
-@admin.register(Empresa)
+@admin.register(Company)
 class EmpresaAdmin(BaseAdmin):
     list_display = ('id', 'name', 'active')
 

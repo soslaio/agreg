@@ -11,7 +11,7 @@ exposed_request = None
 class ExtendedUser(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='usuarios', verbose_name='usuário do sistema')
-    companies = models.ManyToManyField('Empresa', blank=True, verbose_name='empresas')
+    companies = models.ManyToManyField('Company', blank=True, verbose_name='empresas')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     active = models.BooleanField(default=True, verbose_name='ativo')
@@ -46,7 +46,7 @@ class BaseModel(models.Model):
         super().save(*args, **kwargs)
 
 
-class Empresa(BaseModel):
+class Company(BaseModel):
     name = models.CharField(max_length=200)
 
     class Meta:
@@ -57,7 +57,7 @@ class Empresa(BaseModel):
 
 
 class GrupoAprovacao(BaseModel):
-    company = models.ForeignKey(Empresa, on_delete=models.CASCADE, verbose_name='empresa')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name='empresa')
     name = models.CharField(max_length=200, verbose_name='nome')
 
     class Meta:
@@ -74,7 +74,7 @@ class TipoRecurso(BaseModel):
         ('humanos', 'Recursos Humanos'),
         ('materiais', 'Recursos Materiais')
     ]
-    company = models.ForeignKey(Empresa, on_delete=models.CASCADE)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
     name = models.CharField(max_length=200)
     description = models.TextField(null=True, blank=True, verbose_name='descrição')
     natureza = models.CharField(max_length=200, choices=NATUREZAS)
@@ -132,7 +132,7 @@ class Recurso(BaseModel):
                             help_text='No caso de recursos humanos, é o nome do profissional.')
     description = models.TextField(null=True, blank=True, verbose_name='descrição')
     quantity = models.IntegerField(default=1, verbose_name='quantidade')
-    company = models.ForeignKey(Empresa, on_delete=models.CASCADE)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
     tipos_alocacao = models.ManyToManyField(TipoAlocacao, verbose_name='tipos de alocação')
     disponibilidade_inicio = models.TimeField()
     disponibilidade_fim = models.TimeField()
