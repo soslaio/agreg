@@ -57,7 +57,7 @@ class Company(BaseModel):
         return self.name
 
 
-class GrupoAprovacao(BaseModel):
+class ApprovalGroup(BaseModel):
     company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name='empresa')
     name = models.CharField(max_length=200, verbose_name='nome')
 
@@ -79,7 +79,7 @@ class ResourceType(BaseModel):
     name = models.CharField(max_length=200)
     description = models.TextField(null=True, blank=True, verbose_name='descrição')
     natureza = models.CharField(max_length=200, choices=NATUREZAS)
-    grupo = models.ForeignKey(GrupoAprovacao, on_delete=models.CASCADE, null=True, blank=True,
+    grupo = models.ForeignKey(ApprovalGroup, on_delete=models.CASCADE, null=True, blank=True,
                               verbose_name='Grupo de aprovação')
 
     class Meta:
@@ -105,13 +105,13 @@ class TipoAlocacao(BaseModel):
         ('anos', 'Anos')
     ]
     tipo_recurso = models.ForeignKey(ResourceType, on_delete=models.CASCADE)
-    nome = models.CharField(max_length=200)
+    name = models.CharField(max_length=200)
     tempo = models.IntegerField()
     unidade = models.CharField(max_length=200, choices=UNIDADES, default='minutos')
     description = models.TextField(null=True, blank=True, verbose_name='descrição')
 
     class Meta:
-        ordering = ['nome']
+        ordering = ['name']
         verbose_name = 'Tipo de alocação'
         verbose_name_plural = 'Tipos de alocação'
 

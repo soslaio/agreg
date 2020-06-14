@@ -4,10 +4,11 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
 from .viewsets import PermissionedViewset
-from .models import Company, ResourceType, ExtendedUser
+from .models import Company, ResourceType, ExtendedUser, Resource, TipoAlocacao
 from .permissions import IsObjectOwnerOrAdminUser, IsRelatedToCompanyOrAdminUser
 from .serializer import (CompanySerializer, CompanySummarySerializer, ResourceTypeSummarySerializer,
-                         ExtendedUserSerializer, ExtendedUserSummarySerializer)
+                         ExtendedUserSerializer, ExtendedUserSummarySerializer, ResourceSerializer,
+                         ResourceSummarySerializer, TipoAlocacaoSummarySerializer)
 
 
 class CompanyViewSet(PermissionedViewset):
@@ -33,6 +34,29 @@ class ResourceTypeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ResourceType.objects.all()
     serializer_class = ResourceTypeSummarySerializer
     permission_classes = [IsAdminUser]
+
+
+class TipoAlocacaoViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = TipoAlocacao.objects.all()
+    serializer_class = TipoAlocacaoSummarySerializer
+    permission_classes = [IsAdminUser]
+
+
+class ResourceViewSet(PermissionedViewset):
+    permission_classes_by_action = {
+        'list': [IsAdminUser]
+    }
+
+    def list(self, request):
+        queryset = Resource.objects.all()
+        serializer = ResourceSummarySerializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        resources = Resource.objects.all()
+        resource = get_object_or_404(resources, pk=pk)
+        serializer = ResourceSerializer(resource, context={'request': request})
+        return Response(serializer.data)
 
 
 class ExtendedUserViewSet(PermissionedViewset):

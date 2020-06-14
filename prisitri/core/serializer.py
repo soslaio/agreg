@@ -1,7 +1,7 @@
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Company, ResourceType, ExtendedUser, GrupoAprovacao
+from .models import Company, ResourceType, ExtendedUser, ApprovalGroup, Resource, TipoAlocacao
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -23,6 +23,26 @@ class ExtendedUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExtendedUser
+        fields = '__all__'
+
+
+class TipoAlocacaoSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TipoAlocacao
+        fields = ('id', 'name', 'tempo', 'unidade', 'url')
+
+
+class ResourceSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Resource
+        fields = ('id', 'name', 'url')
+
+
+class ResourceSerializer(serializers.ModelSerializer):
+    tipos_alocacao = TipoAlocacaoSummarySerializer(many=True)
+
+    class Meta:
+        model = Resource
         fields = '__all__'
 
 
@@ -50,15 +70,15 @@ class CompanySerializer(serializers.ModelSerializer):
         return serializer.data
 
 
-class GrupoAprovacaoSerializer(serializers.ModelSerializer):
+class ApprovalGroupSerializer(serializers.ModelSerializer):
     class Meta:
-        model = GrupoAprovacao
+        model = ApprovalGroup
         fields = '__all__'
 
 
 class ApprovalGroupSummarySerializer(serializers.ModelSerializer):
     class Meta:
-        model = GrupoAprovacao
+        model = ApprovalGroup
         fields = ('id', 'nome', 'url')
 
 
