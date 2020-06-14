@@ -1,6 +1,6 @@
 
 from django.contrib import admin
-from .models import Company, GrupoAprovacao, TipoRecurso, Recurso, TipoAlocacao, Alocacao, ExtendedUser, Agenda
+from .models import Company, GrupoAprovacao, ResourceType, Resource, TipoAlocacao, Alocacao, ExtendedUser, Agenda
 
 
 class BaseAdmin(admin.ModelAdmin):
@@ -19,12 +19,12 @@ class BaseAdmin(admin.ModelAdmin):
 
 
 @admin.register(Company)
-class EmpresaAdmin(BaseAdmin):
+class CompanyAdmin(BaseAdmin):
     list_display = ('id', 'name', 'active')
 
 
 @admin.register(ExtendedUser)
-class UsuarioAdmin(BaseAdmin):
+class ExtendedUserAdmin(BaseAdmin):
     list_display = ('id', 'nome')
     filter_horizontal = ('companies',)
 
@@ -32,8 +32,8 @@ class UsuarioAdmin(BaseAdmin):
         return obj.nome
 
 
-@admin.register(Recurso)
-class RecursoAdmin(BaseAdmin):
+@admin.register(Resource)
+class ResourceAdmin(BaseAdmin):
     list_display = ('id', 'name', 'tipo_recurso', 'company', 'quantity')
 
     def tipo_recurso(self, obj):
@@ -45,8 +45,8 @@ class GrupoAprovacaoAdmin(BaseAdmin):
     list_display = ('id', 'name', 'company')
 
 
-@admin.register(TipoRecurso)
-class TipoRecursoAdmin(BaseAdmin):
+@admin.register(ResourceType)
+class ResourceTypeAdmin(BaseAdmin):
     list_display = ('name', 'grupo', 'company')
     list_filter = ('natureza', 'grupo', 'company')
 

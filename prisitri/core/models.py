@@ -51,6 +51,7 @@ class Company(BaseModel):
 
     class Meta:
         ordering = ['name']
+        verbose_name = 'Empresa'
 
     def __str__(self):
         return self.name
@@ -69,12 +70,12 @@ class GrupoAprovacao(BaseModel):
         return self.name
 
 
-class TipoRecurso(BaseModel):
+class ResourceType(BaseModel):
     NATUREZAS = [
         ('humanos', 'Recursos Humanos'),
         ('materiais', 'Recursos Materiais')
     ]
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name='empresa')
     name = models.CharField(max_length=200)
     description = models.TextField(null=True, blank=True, verbose_name='descrição')
     natureza = models.CharField(max_length=200, choices=NATUREZAS)
@@ -103,7 +104,7 @@ class TipoAlocacao(BaseModel):
         ('meses', 'Meses'),
         ('anos', 'Anos')
     ]
-    tipo_recurso = models.ForeignKey(TipoRecurso, on_delete=models.CASCADE)
+    tipo_recurso = models.ForeignKey(ResourceType, on_delete=models.CASCADE)
     nome = models.CharField(max_length=200)
     tempo = models.IntegerField()
     unidade = models.CharField(max_length=200, choices=UNIDADES, default='minutos')
@@ -127,18 +128,19 @@ class TipoAlocacao(BaseModel):
         return f'{self.nome} ({self.tempo_unidade})'
 
 
-class Recurso(BaseModel):
+class Resource(BaseModel):
     name = models.CharField(max_length=200, null=True, blank=True,
                             help_text='No caso de recursos humanos, é o nome do profissional.')
     description = models.TextField(null=True, blank=True, verbose_name='descrição')
     quantity = models.IntegerField(default=1, verbose_name='quantidade')
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name='empresa')
     tipos_alocacao = models.ManyToManyField(TipoAlocacao, verbose_name='tipos de alocação')
     disponibilidade_inicio = models.TimeField()
     disponibilidade_fim = models.TimeField()
 
     class Meta:
         ordering = ['name']
+        verbose_name = 'Recurso'
 
     @property
     def tipo_recurso(self):
@@ -149,7 +151,7 @@ class Recurso(BaseModel):
 
 
 class Alocacao(BaseModel):
-    recurso = models.ForeignKey(Recurso, on_delete=models.CASCADE)
+    recurso = models.ForeignKey(Resource, on_delete=models.CASCADE)
     solicitante = models.ForeignKey(ExtendedUser, on_delete=models.CASCADE, related_name='alocacoes')
     observacao = models.TextField(null=True, blank=True, verbose_name='observação')
 

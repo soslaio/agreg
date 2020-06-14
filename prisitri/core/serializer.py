@@ -1,7 +1,7 @@
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Company, TipoRecurso, ExtendedUser, GrupoAprovacao
+from .models import Company, ResourceType, ExtendedUser, GrupoAprovacao
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -44,7 +44,7 @@ class CompanySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_resource_types(self, obj):
-        types = obj.tiporecurso_set.all()
+        types = obj.resourcetype_set.all()
         request = self.context['request']
         serializer = ResourceTypeSummarySerializer(types, many=True, context={'request': request})
         return serializer.data
@@ -66,13 +66,13 @@ class TipoRecursoSerializer(serializers.ModelSerializer):
     grupo = ApprovalGroupSummarySerializer()
 
     class Meta:
-        model = TipoRecurso
+        model = ResourceType
         fields = '__all__'
 
 
 class ResourceTypeSummarySerializer(serializers.ModelSerializer):
     class Meta:
-        model = TipoRecurso
+        model = ResourceType
         fields = ('id', 'name', 'url')
 
 

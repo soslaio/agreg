@@ -2,10 +2,9 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.response import Response
-# from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser
 from .viewsets import PermissionedViewset
-from .models import Company, TipoRecurso, ExtendedUser
+from .models import Company, ResourceType, ExtendedUser
 from .permissions import IsObjectOwnerOrAdminUser, IsRelatedToCompanyOrAdminUser
 from .serializer import (CompanySerializer, CompanySummarySerializer, ResourceTypeSummarySerializer,
                          ExtendedUserSerializer, ExtendedUserSummarySerializer)
@@ -30,8 +29,8 @@ class CompanyViewSet(PermissionedViewset):
         return Response(serializer.data)
 
 
-class TipoRecursoViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = TipoRecurso.objects.all()
+class ResourceTypeViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = ResourceType.objects.all()
     serializer_class = ResourceTypeSummarySerializer
     permission_classes = [IsAdminUser]
 
