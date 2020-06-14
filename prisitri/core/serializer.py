@@ -36,7 +36,7 @@ class CompanySummarySerializer(serializers.ModelSerializer):
 
 
 class CompanySerializer(serializers.ModelSerializer):
-    owner = ExtendedUserSummarySerializer()
+    # owner = ExtendedUserSummarySerializer(default=None)
     resource_types = serializers.SerializerMethodField()
 
     class Meta:

@@ -5,15 +5,16 @@ from .models import Empresa, GrupoAprovacao, TipoRecurso, Recurso, TipoAlocacao,
 
 class BaseAdmin(admin.ModelAdmin):
     def get_exclude(self, request, obj=None):
-        exclude = ['owner']
+        self.exclude = ['owner']
         if not obj:
-            exclude.append('active')
-        return exclude
+            self.exclude.append('active')
+        return self.exclude
 
     def get_readonly_fields(self, request, obj=None):
         self.readonly_fields = ('id',)
         if obj:
-            self.readonly_fields += ('owner',)
+            if hasattr(obj, 'owner'):
+                self.readonly_fields += ('owner',)
         return self.readonly_fields
 
 
