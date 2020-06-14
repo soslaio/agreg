@@ -1,7 +1,7 @@
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from ..models import Company, ResourceType, ExtendedUser, ApprovalGroup, Resource, ScheduleType
+from ..models import Company, ResourceType, ExtendedUser, ApprovalGroup, ScheduleType
 
 
 class UserSerializer(serializers.ModelSerializer):

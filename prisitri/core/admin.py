@@ -1,6 +1,6 @@
 
 from django.contrib import admin
-from .models import Company, ApprovalGroup, ResourceType, Resource, ScheduleType, Alocacao, ExtendedUser, Agenda
+from .models import Company, ApprovalGroup, ResourceType, Resource, ScheduleType, Order, ExtendedUser, Schedule
 
 
 class BaseAdmin(admin.ModelAdmin):
@@ -65,8 +65,8 @@ class ScheduleTypeAdmin(BaseAdmin):
     tempo_unidade.short_description = 'Tempo'
 
 
-@admin.register(Alocacao)
-class AlocacaoAdmin(BaseAdmin):
+@admin.register(Order)
+class OrderAdmin(BaseAdmin):
     list_display = ('id', 'recurso', 'solicitante', 'aprovado')
 
     def aprovado(self, obj):
@@ -75,8 +75,8 @@ class AlocacaoAdmin(BaseAdmin):
     aprovado.boolean = True
 
 
-@admin.register(Agenda)
-class AgendaAdmin(BaseAdmin):
+@admin.register(Schedule)
+class ScheduleAdmin(BaseAdmin):
     list_display = ('id', 'tipo_alocacao', 'inicio', 'termino')
     list_filter = ('tipo_alocacao',)
 

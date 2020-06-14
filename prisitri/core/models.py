@@ -150,7 +150,7 @@ class Resource(BaseModel):
         return self.name or str(self.tipo_recurso)
 
 
-class Alocacao(BaseModel):
+class Order(BaseModel):
     recurso = models.ForeignKey(Resource, on_delete=models.CASCADE)
     solicitante = models.ForeignKey(ExtendedUser, on_delete=models.CASCADE, related_name='alocacoes')
     observacao = models.TextField(null=True, blank=True, verbose_name='observação')
@@ -170,13 +170,13 @@ class Alocacao(BaseModel):
         return f'{self.recurso} para {self.solicitante.nome}'
 
 
-class Agenda(BaseModel):
+class Schedule(BaseModel):
     STATUS = [
         ('aprovado', 'Aprovado'),
         ('pendente', 'Pendente'),
         ('cancelado', 'Cancelado')
     ]
-    alocacao = models.ForeignKey(Alocacao, on_delete=models.CASCADE, verbose_name='alocação')
+    alocacao = models.ForeignKey(Order, on_delete=models.CASCADE, verbose_name='alocação')
     tipo_alocacao = models.ForeignKey(ScheduleType, on_delete=models.CASCADE, verbose_name='tipo de alocação')
     inicio = models.DateTimeField(verbose_name='início')
     termino = models.DateTimeField(verbose_name='término')
@@ -190,7 +190,3 @@ class Agenda(BaseModel):
 def create_extendeduser(sender, instance, created, **kwargs):
     if created:
         ExtendedUser.objects.create(user=instance)
-
-
-
-
