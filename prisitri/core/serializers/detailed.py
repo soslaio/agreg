@@ -1,19 +1,8 @@
 
-from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Company, ResourceType, ExtendedUser, ApprovalGroup, Resource, TipoAlocacao
-
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('id', 'username', 'first_name', 'last_name', 'email')
-
-
-class CompanySummarySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Company
-        fields = ('id', 'name', 'url')
+from ..models import Company, ResourceType, ExtendedUser, ApprovalGroup, Resource, ScheduleType
+from .summary import (CompanySummarySerializer, ExtendedUserSummarySerializer, ResourceTypeSummarySerializer,
+                      ScheduleTypeSummarySerializer, ApprovalGroupSummarySerializer, UserSerializer)
 
 
 class ExtendedUserSerializer(serializers.ModelSerializer):
@@ -26,10 +15,13 @@ class ExtendedUserSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class TipoAlocacaoSummarySerializer(serializers.ModelSerializer):
+class ScheduleTypeSerializer(serializers.ModelSerializer):
+    owner = ExtendedUserSummarySerializer()
+    tipo_recurso = ResourceTypeSummarySerializer()
+
     class Meta:
-        model = TipoAlocacao
-        fields = ('id', 'name', 'tempo', 'unidade', 'url')
+        model = ScheduleType
+        fields = '__all__'
 
 
 class ResourceSummarySerializer(serializers.ModelSerializer):
@@ -39,20 +31,11 @@ class ResourceSummarySerializer(serializers.ModelSerializer):
 
 
 class ResourceSerializer(serializers.ModelSerializer):
-    tipos_alocacao = TipoAlocacaoSummarySerializer(many=True)
+    tipos_alocacao = ScheduleTypeSummarySerializer(many=True)
 
     class Meta:
         model = Resource
         fields = '__all__'
-
-
-class ExtendedUserSummarySerializer(serializers.ModelSerializer):
-    id = serializers.UUIDField()
-    user = UserSerializer()
-
-    class Meta:
-        model = ExtendedUser
-        fields = ('id', 'user', 'url')
 
 
 class CompanySerializer(serializers.ModelSerializer):
@@ -76,27 +59,11 @@ class ApprovalGroupSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ApprovalGroupSummarySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ApprovalGroup
-        fields = ('id', 'nome', 'url')
-
-
 class TipoRecursoSerializer(serializers.ModelSerializer):
     grupo = ApprovalGroupSummarySerializer()
 
     class Meta:
         model = ResourceType
         fields = '__all__'
-
-
-class ResourceTypeSummarySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ResourceType
-        fields = ('id', 'name', 'url')
-
-
-
-
 
 

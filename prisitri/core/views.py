@@ -4,11 +4,11 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
 from .viewsets import PermissionedViewset
-from .models import Company, ResourceType, ExtendedUser, Resource, TipoAlocacao
+from .models import Company, ResourceType, ExtendedUser, Resource, ScheduleType
 from .permissions import IsObjectOwnerOrAdminUser, IsRelatedToCompanyOrAdminUser
-from .serializer import (CompanySerializer, CompanySummarySerializer, ResourceTypeSummarySerializer,
-                         ExtendedUserSerializer, ExtendedUserSummarySerializer, ResourceSerializer,
-                         ResourceSummarySerializer, TipoAlocacaoSummarySerializer)
+from .serializers import (CompanySerializer, CompanySummarySerializer, ResourceTypeSummarySerializer,
+                          ExtendedUserSerializer, ExtendedUserSummarySerializer, ResourceSerializer,
+                          ResourceSummarySerializer, ScheduleTypeSummarySerializer, ScheduleTypeSerializer)
 
 
 class CompanyViewSet(PermissionedViewset):
@@ -36,10 +36,21 @@ class ResourceTypeViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAdminUser]
 
 
-class TipoAlocacaoViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = TipoAlocacao.objects.all()
-    serializer_class = TipoAlocacaoSummarySerializer
+class ScheduleTypeViewSet(PermissionedViewset):
+    queryset = ScheduleType.objects.all()
+    serializer_class = ScheduleTypeSummarySerializer
     permission_classes = [IsAdminUser]
+
+    def list(self, request):
+        queryset = ScheduleType.objects.all()
+        serializer = ScheduleTypeSummarySerializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        scheduletypes = ScheduleType.objects.all()
+        scheduletype = get_object_or_404(scheduletypes, pk=pk)
+        serializer = ScheduleTypeSerializer(scheduletype, context={'request': request})
+        return Response(serializer.data)
 
 
 class ResourceViewSet(PermissionedViewset):

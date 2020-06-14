@@ -95,7 +95,7 @@ class ResourceType(BaseModel):
         return f'{self.name} ({self.company})'
 
 
-class TipoAlocacao(BaseModel):
+class ScheduleType(BaseModel):
     UNIDADES = [
         ('minutos', 'Minutos'),
         ('horas', 'Horas'),
@@ -134,7 +134,7 @@ class Resource(BaseModel):
     description = models.TextField(null=True, blank=True, verbose_name='descrição')
     quantity = models.IntegerField(default=1, verbose_name='quantidade')
     company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name='empresa')
-    tipos_alocacao = models.ManyToManyField(TipoAlocacao, verbose_name='tipos de alocação')
+    tipos_alocacao = models.ManyToManyField(ScheduleType, verbose_name='tipos de alocação')
     disponibilidade_inicio = models.TimeField()
     disponibilidade_fim = models.TimeField()
 
@@ -177,7 +177,7 @@ class Agenda(BaseModel):
         ('cancelado', 'Cancelado')
     ]
     alocacao = models.ForeignKey(Alocacao, on_delete=models.CASCADE, verbose_name='alocação')
-    tipo_alocacao = models.ForeignKey(TipoAlocacao, on_delete=models.CASCADE, verbose_name='tipo de alocação')
+    tipo_alocacao = models.ForeignKey(ScheduleType, on_delete=models.CASCADE, verbose_name='tipo de alocação')
     inicio = models.DateTimeField(verbose_name='início')
     termino = models.DateTimeField(verbose_name='término')
     status = models.CharField(max_length=200, choices=STATUS)

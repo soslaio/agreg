@@ -1,6 +1,6 @@
 
 from django.contrib import admin
-from .models import Company, ApprovalGroup, ResourceType, Resource, TipoAlocacao, Alocacao, ExtendedUser, Agenda
+from .models import Company, ApprovalGroup, ResourceType, Resource, ScheduleType, Alocacao, ExtendedUser, Agenda
 
 
 class BaseAdmin(admin.ModelAdmin):
@@ -51,8 +51,8 @@ class ResourceTypeAdmin(BaseAdmin):
     list_filter = ('natureza', 'grupo', 'company')
 
 
-@admin.register(TipoAlocacao)
-class TipoAlocacaoAdmin(BaseAdmin):
+@admin.register(ScheduleType)
+class ScheduleTypeAdmin(BaseAdmin):
     list_display = ('name', 'get_tipo_recurso', 'tempo_unidade')
     list_filter = ('tipo_recurso',)
 
