@@ -1,5 +1,6 @@
 
 import uuid
+from datetime import datetime
 from django.db import models
 from django.dispatch import receiver
 from django.contrib.auth.models import User
@@ -22,11 +23,11 @@ class ExtendedUser(models.Model):
         verbose_name_plural = 'Usuários'
 
     @property
-    def nome(self):
+    def name(self):
         return self.user.get_full_name() if self.user.first_name else self.user.username
 
     def __str__(self):
-        return self.nome
+        return self.name
 
 
 class BaseModel(models.Model):
@@ -88,8 +89,8 @@ class ResourceType(BaseModel):
         verbose_name_plural = 'Tipos de recursos'
 
     @property
-    def necessita_aprovacao(self):
-        return self.grupo is not None
+    def needs_approval(self):
+        return self.approval_group is not None
 
     @property
     def resources(self):
@@ -113,11 +114,13 @@ class ScheduleType(BaseModel):
     time = models.IntegerField()
     unit = models.CharField(max_length=200, choices=UNIDADES, default='minutos')
     description = models.TextField(null=True, blank=True, verbose_name='descrição')
+    available_from = models.TimeField(verbose_name='disponível de')
+    available_until = models.TimeField(verbose_name='disponível até')
 
     class Meta:
         ordering = ['name']
-        verbose_name = 'Tipo de alocação'
-        verbose_name_plural = 'Tipos de alocação'
+        verbose_name = 'Tipo de agenda'
+        verbose_name_plural = 'Tipos de agendas'
 
     @property
     def time_unit(self):
@@ -140,39 +143,41 @@ class Resource(BaseModel):
     quantity = models.IntegerField(default=1, verbose_name='quantidade')
     company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name='empresa')
     schedule_types = models.ManyToManyField(ScheduleType, verbose_name='tipos de alocação')
-    available_from = models.TimeField()
-    available_until = models.TimeField()
+    available_from = models.TimeField(verbose_name='disponível de')
+    available_until = models.TimeField(verbose_name='disponível até')
 
     class Meta:
         ordering = ['name']
         verbose_name = 'Recurso'
 
-    @property
-    def tipo_recurso(self):
-        return self.schedule_types.first().resource_type
+    def get_schedules(self, date):
+        date_obj = datetime.strptime(date, '%Y-%m-%d')
+        orders = self.order_set.filter(resource__id=self.id)
+        orders_ids = set(orders.values_list('id', flat=True))
+        schedules = Schedule.objects.filter(order__id__in=orders_ids).filter(start__date=date_obj)
+        return schedules
 
     def __str__(self):
         return self.name or self.resource_type.name
 
 
 class Order(BaseModel):
-    recurso = models.ForeignKey(Resource, on_delete=models.CASCADE)
-    solicitante = models.ForeignKey(ExtendedUser, on_delete=models.CASCADE, related_name='alocacoes')
-    observacao = models.TextField(null=True, blank=True, verbose_name='observação')
+    resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
+    requester = models.ForeignKey(ExtendedUser, on_delete=models.CASCADE, related_name='alocacoes')
+    notes = models.TextField(null=True, blank=True, verbose_name='observação')
 
     class Meta:
-        ordering = ['recurso']
+        ordering = ['resource']
         verbose_name = 'Alocação'
         verbose_name_plural = 'Alocações'
 
     @property
-    def aprovado(self):
+    def approved(self):
         """Informa se todas as agendas da alocação foram aprovadas"""
-        print(self.agenda_set.all())
         return False
 
     def __str__(self):
-        return f'{self.recurso} para {self.solicitante.nome}'
+        return f'{self.resource} para {self.requester.name}'
 
 
 class Schedule(BaseModel):
@@ -181,17 +186,21 @@ class Schedule(BaseModel):
         ('pendente', 'Pendente'),
         ('cancelado', 'Cancelado')
     ]
-    alocacao = models.ForeignKey(Order, on_delete=models.CASCADE, verbose_name='alocação')
-    tipo_alocacao = models.ForeignKey(ScheduleType, on_delete=models.CASCADE, verbose_name='tipo de alocação')
-    inicio = models.DateTimeField(verbose_name='início')
-    termino = models.DateTimeField(verbose_name='término')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, verbose_name='alocação')
+    start = models.DateTimeField(verbose_name='início')
+    end = models.DateTimeField(verbose_name='término')
     status = models.CharField(max_length=200, choices=STATUS)
 
+    class Meta:
+        ordering = ['order', 'start', 'end']
+        verbose_name = 'Agenda'
+
     def __str__(self):
-        return f'{self.alocacao}: {self.tipo_alocacao}'
+        return f'{self.order}: {self.start}'
 
 
 @receiver(post_save, sender=User)
 def create_extendeduser(sender, instance, created, **kwargs):
     if created:
         ExtendedUser.objects.create(user=instance)
+

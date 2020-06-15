@@ -1,7 +1,7 @@
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from ..models import Company, ResourceType, ExtendedUser, ApprovalGroup, ScheduleType, Resource
+from ..models import Company, ResourceType, ExtendedUser, ApprovalGroup, ScheduleType, Resource, Order, Schedule
 
 
 class UserSummarySerializer(serializers.ModelSerializer):
@@ -13,6 +13,12 @@ class UserSummarySerializer(serializers.ModelSerializer):
 
     def get_full_name(self, obj):
         return obj.get_full_name()
+
+
+class OrderSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ('id', 'resource', 'requester')
 
 
 class CompanySummarySerializer(serializers.ModelSerializer):
@@ -40,6 +46,12 @@ class ScheduleTypeSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = ScheduleType
         fields = ('id', 'name', 'time', 'unit', 'url')
+
+
+class ScheduleSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Schedule
+        fields = ('id', 'start', 'end')
 
 
 class ApprovalGroupSummarySerializer(serializers.ModelSerializer):

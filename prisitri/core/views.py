@@ -1,15 +1,17 @@
 
+from datetime import datetime
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
+from rest_framework.decorators import action
 from .viewsets import PermissionedViewset
 from .models import Company, ResourceType, ExtendedUser, Resource, ScheduleType, ApprovalGroup
 from .permissions import IsObjectOwnerOrAdminUser, IsRelatedToCompanyOrAdminUser
 from .serializers import (CompanySerializer, CompanySummarySerializer, ResourceTypeSummarySerializer,
                           ExtendedUserSerializer, ExtendedUserSummarySerializer, ResourceSerializer,
                           ResourceSummarySerializer, ScheduleTypeSummarySerializer, ScheduleTypeSerializer,
-                          ResourceTypeSerializer, ApprovalGroupSummarySerializer)
+                          ResourceTypeSerializer, ApprovalGroupSummarySerializer, ScheduleSummarySerializer)
 
 
 class ApprovalGroupViewSet(viewsets.ReadOnlyModelViewSet):
@@ -80,6 +82,15 @@ class ResourceViewSet(PermissionedViewset):
         resources = Resource.objects.all()
         resource = get_object_or_404(resources, pk=pk)
         serializer = ResourceSerializer(resource, context={'request': request})
+        return Response(serializer.data)
+
+    @action(detail=True)
+    def schedules(self, request, pk=None):
+        resources = Resource.objects.all()
+        resource = get_object_or_404(resources, pk=pk)
+        date = request.query_params.get('date', datetime.strftime(datetime.now(), '%Y-%m-%d'))
+        schedules = resource.get_schedules(date)
+        serializer = ScheduleSummarySerializer(schedules, many=True, context={'request': request})
         return Response(serializer.data)
 
 

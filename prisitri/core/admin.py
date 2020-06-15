@@ -34,11 +34,8 @@ class ExtendedUserAdmin(BaseAdmin):
 
 @admin.register(Resource)
 class ResourceAdmin(BaseAdmin):
-    list_display = ('id', 'name', 'tipo_recurso', 'company', 'quantity')
+    list_display = ('id', 'name', 'resource_type', 'company', 'quantity')
     filter_horizontal = ('schedule_types',)
-
-    def tipo_recurso(self, obj):
-        return obj.tipo_recurso
 
 
 @admin.register(ApprovalGroup)
@@ -68,17 +65,17 @@ class ScheduleTypeAdmin(BaseAdmin):
 
 @admin.register(Order)
 class OrderAdmin(BaseAdmin):
-    list_display = ('id', 'recurso', 'solicitante', 'aprovado')
+    list_display = ('id', 'resource', 'requester', 'approved')
 
-    def aprovado(self, obj):
-        return obj.aprovado
+    def approved(self, obj):
+        return obj.approved
 
-    aprovado.boolean = True
+    approved.boolean = True
 
 
 @admin.register(Schedule)
 class ScheduleAdmin(BaseAdmin):
-    list_display = ('id', 'tipo_alocacao', 'inicio', 'termino')
-    list_filter = ('tipo_alocacao',)
+    list_display = ('id', 'order', 'start', 'end')
+    list_filter = ('order',)
 
 

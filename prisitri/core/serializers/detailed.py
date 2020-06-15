@@ -3,7 +3,8 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from ..models import Company, ResourceType, ExtendedUser, ApprovalGroup, Resource, ScheduleType
 from .summary import (CompanySummarySerializer, ExtendedUserSummarySerializer, ResourceTypeSummarySerializer,
-                      ScheduleTypeSummarySerializer, ApprovalGroupSummarySerializer, ResourceSummarySerializer)
+                      ScheduleTypeSummarySerializer, ApprovalGroupSummarySerializer, ResourceSummarySerializer,
+                      OrderSummarySerializer, ScheduleSummarySerializer)
 
 
 class UserSerializer(serializers.ModelSerializer):
