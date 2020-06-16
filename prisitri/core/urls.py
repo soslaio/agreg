@@ -16,6 +16,7 @@ router.register('approvalgroups', ApprovalGroupViewSet, basename='approvalgroup'
 
 corepatterns = [
     path('', include(router.urls)),
-    path('resources/<str:pk>/availabilities/<str:sid>/', ResourceViewSet.availability, name='resources-availability'),
-    path('admin/', admin.site.urls)
+    path('admin/', admin.site.urls),
+    path('resources/<str:pk>/availabilities/<str:schedule_type_id>/',
+         ResourceViewSet.availability, name='resources-availability')
 ]

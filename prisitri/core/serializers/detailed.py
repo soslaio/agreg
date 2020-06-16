@@ -25,7 +25,7 @@ class ExtendedUserSerializer(serializers.ModelSerializer):
 
 class ScheduleTypeSerializer(serializers.ModelSerializer):
     owner = ExtendedUserSummarySerializer()
-    tipo_recurso = ResourceTypeSummarySerializer()
+    resource_type = ResourceTypeSummarySerializer()
 
     class Meta:
         model = ScheduleType
@@ -76,3 +76,8 @@ class TipoRecursoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResourceType
         fields = '__all__'
+
+
+class AvailabilitySerializer(serializers.Serializer):
+    start = serializers.DateTimeField()
+    end = serializers.DateTimeField()

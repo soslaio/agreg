@@ -1,7 +1,7 @@
 
 import uuid
-from datetime import datetime
 from django.db import models
+from datetime import datetime, timedelta
 from django.dispatch import receiver
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
@@ -102,17 +102,17 @@ class ResourceType(BaseModel):
 
 class ScheduleType(BaseModel):
     UNIDADES = [
-        ('minutos', 'Minutos'),
-        ('horas', 'Horas'),
-        ('dias', 'Dias'),
-        ('semanas', 'Semanas'),
-        ('meses', 'Meses'),
-        ('anos', 'Anos')
+        ('minutes', 'Minutos'),
+        ('hours', 'Horas'),
+        ('days', 'Dias'),
+        ('weeks', 'Semanas'),
+        ('months', 'Meses'),
+        ('years', 'Anos')
     ]
     resource_type = models.ForeignKey(ResourceType, on_delete=models.CASCADE)
     name = models.CharField(max_length=200)
     time = models.IntegerField()
-    unit = models.CharField(max_length=200, choices=UNIDADES, default='minutos')
+    unit = models.CharField(max_length=200, choices=UNIDADES, default='minutes')
     description = models.TextField(null=True, blank=True, verbose_name='descrição')
     available_from = models.TimeField(verbose_name='disponível de')
     available_until = models.TimeField(verbose_name='disponível até')
@@ -122,22 +122,13 @@ class ScheduleType(BaseModel):
         verbose_name = 'Tipo de agenda'
         verbose_name_plural = 'Tipos de agendas'
 
-    def time_in_minutes(self):
-        if self.unit == 'minutos':
-            return self.time
-
-        if self.unit == 'horas':
-            return self.time * 60
-
-        if self.unit == 'dias':
-            return self.time * 60 * 24
-
-        return self.time
+    def get_time_delta(self):
+        return eval(f'timedelta({self.unit}={self.time})')
 
     @property
     def time_unit(self):
         if self.time == 1:
-            if self.unit != 'meses':
+            if self.unit != 'months':
                 return f'{self.time} {self.unit[:-1]}'
             else:
                 return f'{self.time} mês'
@@ -162,9 +153,26 @@ class Resource(BaseModel):
         ordering = ['name']
         verbose_name = 'Recurso'
 
-    def get_availability(self, schedule_type: ScheduleType):
-        print(schedule_type.time_in_minutes)
-        pass
+    def __getall_availabilities(self, schedule_type, date):
+        date_obj = datetime.strptime(date, '%Y-%m-%d')
+        delta = schedule_type.get_time_delta()
+        limit = datetime.combine(date_obj, self.available_until)
+        all_availabilities = []
+        start = datetime.combine(date_obj, self.available_from)
+        end = start + delta
+
+        while True:
+            if end > limit:
+                break
+            all_availabilities.append({'start': start, 'end': end})
+            start = end
+            end = end + delta
+
+        return all_availabilities
+
+    def get_availability(self, schedule_type: ScheduleType, date: str):
+        all_availabilities = self.__getall_availabilities(schedule_type, date)
+        return all_availabilities
 
     def get_schedules(self, date):
         date_obj = datetime.strptime(date, '%Y-%m-%d')

@@ -12,7 +12,8 @@ from .permissions import IsObjectOwnerOrAdminUser, IsRelatedToCompanyOrAdminUser
 from .serializers import (CompanySerializer, CompanySummarySerializer, ResourceTypeSummarySerializer,
                           ExtendedUserSerializer, ExtendedUserSummarySerializer, ResourceSerializer,
                           ResourceSummarySerializer, ScheduleTypeSummarySerializer, ScheduleTypeSerializer,
-                          ResourceTypeSerializer, ApprovalGroupSummarySerializer, ScheduleSummarySerializer)
+                          ResourceTypeSerializer, ApprovalGroupSummarySerializer, ScheduleSummarySerializer,
+                          AvailabilitySerializer)
 
 
 class ApprovalGroupViewSet(viewsets.ReadOnlyModelViewSet):
@@ -86,13 +87,15 @@ class ResourceViewSet(PermissionedViewset):
         return Response(serializer.data)
 
     @api_view(['GET'])
-    def availability(request, pk=None, sid=None):
+    def availability(request, pk=None, schedule_type_id=None):
         resources = Resource.objects.all()
         resource = get_object_or_404(resources, pk=pk)
-        date = request.query_params.get('date', datetime.strftime(datetime.now(), '%Y-%m-%d'))
+        schedule_types = ScheduleType.objects.all()
+        schedule_type = get_object_or_404(schedule_types, pk=schedule_type_id)
 
-        schedules = resource.get_schedules(date)
-        serializer = ScheduleSummarySerializer(schedules, many=True, context={'request': request})
+        date = request.query_params.get('date', datetime.strftime(datetime.now(), '%Y-%m-%d'))
+        availabilities = resource.get_availability(schedule_type, date)
+        serializer = AvailabilitySerializer(availabilities, many=True, context={'request': request})
         return Response(serializer.data)
 
 
