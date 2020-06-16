@@ -58,9 +58,3 @@ class ApprovalGroupSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = ApprovalGroup
         fields = ('id', 'name', 'url')
-
-
-class ResourceSummarySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Resource
-        fields = ('id', 'name', 'url')

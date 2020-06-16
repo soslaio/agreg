@@ -4,7 +4,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
-from rest_framework.decorators import action
+from rest_framework.decorators import api_view
+
 from .viewsets import PermissionedViewset
 from .models import Company, ResourceType, ExtendedUser, Resource, ScheduleType, ApprovalGroup
 from .permissions import IsObjectOwnerOrAdminUser, IsRelatedToCompanyOrAdminUser
@@ -84,11 +85,12 @@ class ResourceViewSet(PermissionedViewset):
         serializer = ResourceSerializer(resource, context={'request': request})
         return Response(serializer.data)
 
-    @action(detail=True)
-    def schedules(self, request, pk=None):
+    @api_view(['GET'])
+    def availability(request, pk=None, sid=None):
         resources = Resource.objects.all()
         resource = get_object_or_404(resources, pk=pk)
         date = request.query_params.get('date', datetime.strftime(datetime.now(), '%Y-%m-%d'))
+
         schedules = resource.get_schedules(date)
         serializer = ScheduleSummarySerializer(schedules, many=True, context={'request': request})
         return Response(serializer.data)

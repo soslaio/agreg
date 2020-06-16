@@ -122,6 +122,18 @@ class ScheduleType(BaseModel):
         verbose_name = 'Tipo de agenda'
         verbose_name_plural = 'Tipos de agendas'
 
+    def time_in_minutes(self):
+        if self.unit == 'minutos':
+            return self.time
+
+        if self.unit == 'horas':
+            return self.time * 60
+
+        if self.unit == 'dias':
+            return self.time * 60 * 24
+
+        return self.time
+
     @property
     def time_unit(self):
         if self.time == 1:
@@ -149,6 +161,10 @@ class Resource(BaseModel):
     class Meta:
         ordering = ['name']
         verbose_name = 'Recurso'
+
+    def get_availability(self, schedule_type: ScheduleType):
+        print(schedule_type.time_in_minutes)
+        pass
 
     def get_schedules(self, date):
         date_obj = datetime.strptime(date, '%Y-%m-%d')

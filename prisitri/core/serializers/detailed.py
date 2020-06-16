@@ -1,10 +1,10 @@
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from ..models import Company, ResourceType, ExtendedUser, ApprovalGroup, Resource, ScheduleType
+from ..models import Company, ResourceType, ExtendedUser, ApprovalGroup, ScheduleType
 from .summary import (CompanySummarySerializer, ExtendedUserSummarySerializer, ResourceTypeSummarySerializer,
-                      ScheduleTypeSummarySerializer, ApprovalGroupSummarySerializer, ResourceSummarySerializer,
-                      OrderSummarySerializer, ScheduleSummarySerializer)
+                      ApprovalGroupSummarySerializer)
+from .resources import ResourceSummarySerializer
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -49,17 +49,6 @@ class ResourceTypeSerializer(serializers.ModelSerializer):
         return serializer.data
 
 
-class ResourceSerializer(serializers.ModelSerializer):
-    schedule_types = ScheduleTypeSummarySerializer(many=True)
-    company = CompanySummarySerializer()
-    resource_type = ResourceTypeSummarySerializer()
-    owner = ExtendedUserSummarySerializer()
-
-    class Meta:
-        model = Resource
-        fields = '__all__'
-
-
 class CompanySerializer(serializers.ModelSerializer):
     owner = ExtendedUserSummarySerializer()
     resource_types = serializers.SerializerMethodField()
@@ -87,5 +76,3 @@ class TipoRecursoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResourceType
         fields = '__all__'
-
-
