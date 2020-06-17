@@ -6,10 +6,12 @@ from .models import (Company, ApprovalGroup, ResourceType, Resource, ScheduleTyp
 
 class AvailabilityInline(admin.TabularInline):
     model = Availability
+    exclude = ('owner', 'is_active')
 
 
 class ScheduleInline(admin.TabularInline):
     model = Schedule
+    exclude = ('owner', 'is_active')
 
 
 class BaseAdmin(admin.ModelAdmin):
@@ -32,9 +34,9 @@ class CompanyAdmin(BaseAdmin):
     list_display = ('id', 'name', 'is_active')
 
 
-@admin.register(Availability)
-class AvailabilityAdmin(BaseAdmin):
-    list_display = ('id', 'resource', 'start', 'end')
+# @admin.register(Availability)
+# class AvailabilityAdmin(BaseAdmin):
+#     list_display = ('id', 'resource', 'start', 'end')
 
 
 @admin.register(ExtendedUser)
@@ -89,9 +91,9 @@ class OrderAdmin(BaseAdmin):
     approved.boolean = True
 
 
-@admin.register(Schedule)
-class ScheduleAdmin(BaseAdmin):
-    list_display = ('id', 'order', 'start', 'end')
-    list_filter = ('order',)
+# @admin.register(Schedule)
+# class ScheduleAdmin(BaseAdmin):
+#     list_display = ('id', 'order', 'start', 'end')
+#     list_filter = ('order',)
 
 
