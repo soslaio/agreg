@@ -13,7 +13,7 @@ from .serializers import (CompanySerializer, CompanySummarySerializer, ResourceT
                           ExtendedUserSerializer, ExtendedUserSummarySerializer, ResourceSerializer,
                           ResourceSummarySerializer, ScheduleTypeSummarySerializer, ScheduleTypeSerializer,
                           ResourceTypeSerializer, ApprovalGroupSummarySerializer, ScheduleSummarySerializer,
-                          AvailabilitySerializer)
+                          SlotSerializer)
 
 
 class ApprovalGroupViewSet(viewsets.ReadOnlyModelViewSet):
@@ -95,7 +95,7 @@ class ResourceViewSet(PermissionedViewset):
 
         date = request.query_params.get('date', datetime.strftime(datetime.now(), '%Y-%m-%d'))
         availabilities = resource.get_availability(schedule_type, date)
-        serializer = AvailabilitySerializer(availabilities, many=True, context={'request': request})
+        serializer = SlotSerializer(availabilities, many=True, context={'request': request})
         return Response(serializer.data)
 
     @action(detail=True)

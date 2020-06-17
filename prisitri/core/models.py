@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from django.dispatch import receiver
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
+from django.contrib.admin.utils import flatten
 
 exposed_request = None
 
@@ -151,26 +152,53 @@ class Resource(BaseModel):
         ordering = ['name']
         verbose_name = 'Recurso'
 
-    def __getall_availabilities(self, schedule_type, date):
-        date_obj = datetime.strptime(date, '%Y-%m-%d')
-        delta = schedule_type.get_time_delta()
-        limit = datetime.combine(date_obj, self.available_until)
-        all_availabilities = []
-        start = datetime.combine(date_obj, self.available_from)
+    # def __getall_availabilities(self, schedule_type, date):
+    #     date_obj = datetime.strptime(date, '%Y-%m-%d')
+    #     delta = schedule_type.get_time_delta()
+    #     limit = datetime.combine(date_obj, self.available_until)
+    #     all_availabilities = []
+    #     start = datetime.combine(date_obj, self.available_from)
+    #     end = start + delta
+    #
+    #     while True:
+    #         if end > limit:
+    #             break
+    #         all_availabilities.append({'start': start, 'end': end})
+    #         start = end
+    #         end = end + delta
+    #
+    #     return all_availabilities
+    #
+    # def get_availability(self, schedule_type: ScheduleType, date: str):
+    #     all_availabilities = self.__getall_availabilities(schedule_type, date)
+    #     return all_availabilities
+
+    def __get_slots_in_availability(self, availability_start, availability_end, delta):
+        slots = []
+        start = availability_start
         end = start + delta
 
         while True:
-            if end > limit:
+            if end > availability_end:
                 break
-            all_availabilities.append({'start': start, 'end': end})
+            slots.append({'start': start, 'end': end})
             start = end
             end = end + delta
 
-        return all_availabilities
+        return slots
 
     def get_availability(self, schedule_type: ScheduleType, date: str):
-        all_availabilities = self.__getall_availabilities(schedule_type, date)
-        return all_availabilities
+        availabilities = self.availability_set.all()
+        date_obj = datetime.strptime(date, '%Y-%m-%d')
+        delta = schedule_type.get_time_delta()
+        slots = []
+        for availability in availabilities:
+            start = datetime.combine(date_obj, availability.start)
+            end = datetime.combine(date_obj, availability.end)
+            availability_slots = self.__get_slots_in_availability(start, end, delta)
+            slots.append(availability_slots)
+
+        return flatten(slots)
 
     def get_schedules(self, date):
         date_obj = datetime.strptime(date, '%Y-%m-%d')

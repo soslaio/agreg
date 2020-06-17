@@ -78,6 +78,6 @@ class TipoRecursoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class AvailabilitySerializer(serializers.Serializer):
+class SlotSerializer(serializers.Serializer):
     start = serializers.DateTimeField()
     end = serializers.DateTimeField()
