@@ -146,8 +146,6 @@ class Resource(BaseModel):
     quantity = models.IntegerField(default=1, verbose_name='quantidade')
     company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name='empresa')
     schedule_types = models.ManyToManyField(ScheduleType, verbose_name='tipos de alocação')
-    available_from = models.TimeField(verbose_name='disponível de')
-    available_until = models.TimeField(verbose_name='disponível até')
 
     class Meta:
         ordering = ['name']
@@ -185,9 +183,22 @@ class Resource(BaseModel):
         return self.name or self.resource_type.name
 
 
+class Availability(BaseModel):
+    resource = models.ForeignKey(Resource, on_delete=models.CASCADE, verbose_name='recurso')
+    start = models.TimeField(verbose_name='início')
+    end = models.TimeField(verbose_name='término')
+
+    class Meta:
+        ordering = ['resource', 'start']
+
+    def __str__(self):
+        return f'{self.resource} das {self.start} às {self.end}'
+
+
 class Order(BaseModel):
-    resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
-    requester = models.ForeignKey(ExtendedUser, on_delete=models.CASCADE, related_name='alocacoes')
+    resource = models.ForeignKey(Resource, on_delete=models.CASCADE, verbose_name='recurso')
+    requester = models.ForeignKey(ExtendedUser, on_delete=models.CASCADE, related_name='alocacoes',
+                                  verbose_name='solicitante')
     notes = models.TextField(null=True, blank=True, verbose_name='observação')
 
     class Meta:

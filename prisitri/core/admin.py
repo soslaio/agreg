@@ -1,6 +1,15 @@
 
 from django.contrib import admin
-from .models import Company, ApprovalGroup, ResourceType, Resource, ScheduleType, Order, ExtendedUser, Schedule
+from .models import (Company, ApprovalGroup, ResourceType, Resource, ScheduleType, Order, ExtendedUser, Schedule,
+                     Availability)
+
+
+class AvailabilityInline(admin.TabularInline):
+    model = Availability
+
+
+class ScheduleInline(admin.TabularInline):
+    model = Schedule
 
 
 class BaseAdmin(admin.ModelAdmin):
@@ -23,6 +32,11 @@ class CompanyAdmin(BaseAdmin):
     list_display = ('id', 'name', 'is_active')
 
 
+@admin.register(Availability)
+class AvailabilityAdmin(BaseAdmin):
+    list_display = ('id', 'resource', 'start', 'end')
+
+
 @admin.register(ExtendedUser)
 class ExtendedUserAdmin(BaseAdmin):
     list_display = ('id', 'nome')
@@ -36,6 +50,7 @@ class ExtendedUserAdmin(BaseAdmin):
 class ResourceAdmin(BaseAdmin):
     list_display = ('id', 'name', 'resource_type', 'company', 'quantity')
     filter_horizontal = ('schedule_types',)
+    inlines = [AvailabilityInline]
 
 
 @admin.register(ApprovalGroup)
@@ -66,6 +81,7 @@ class ScheduleTypeAdmin(BaseAdmin):
 @admin.register(Order)
 class OrderAdmin(BaseAdmin):
     list_display = ('id', 'resource', 'requester', 'approved')
+    inlines = [ScheduleInline]
 
     def approved(self, obj):
         return obj.approved
