@@ -2,10 +2,12 @@
 import uuid
 from django.db import models
 from datetime import datetime, timedelta
+from django.db.models import Q
 from django.dispatch import receiver
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.contrib.admin.utils import flatten
+from django.conf import settings
 
 exposed_request = None
 
@@ -152,28 +154,13 @@ class Resource(BaseModel):
         ordering = ['name']
         verbose_name = 'Recurso'
 
-    # def __getall_availabilities(self, schedule_type, date):
-    #     date_obj = datetime.strptime(date, '%Y-%m-%d')
-    #     delta = schedule_type.get_time_delta()
-    #     limit = datetime.combine(date_obj, self.available_until)
-    #     all_availabilities = []
-    #     start = datetime.combine(date_obj, self.available_from)
-    #     end = start + delta
-    #
-    #     while True:
-    #         if end > limit:
-    #             break
-    #         all_availabilities.append({'start': start, 'end': end})
-    #         start = end
-    #         end = end + delta
-    #
-    #     return all_availabilities
-    #
-    # def get_availability(self, schedule_type: ScheduleType, date: str):
-    #     all_availabilities = self.__getall_availabilities(schedule_type, date)
-    #     return all_availabilities
+    def __get_schedules(self, date_obj):
+        orders = self.order_set.all()
+        orders_ids = set(orders.values_list('id', flat=True))
+        schedules = Schedule.objects.filter(order__id__in=orders_ids).filter(start__date=date_obj)
+        return schedules
 
-    def __get_slots_in_availability(self, availability_start, availability_end, delta):
+    def __get_slots_in_availability(self, availability_start, availability_end, delta, schedules):
         slots = []
         start = availability_start
         end = start + delta
@@ -181,30 +168,41 @@ class Resource(BaseModel):
         while True:
             if end > availability_end:
                 break
-            slots.append({'start': start, 'end': end})
-            start = end
-            end = end + delta
 
+            slot_schedules = schedules.filter(
+                Q(start__gte=start, start__lt=end) |
+                Q(end__gt=start, end__lte=end) |
+                Q(start__lt=start, end__gt=end)
+            )
+            is_occupied = slot_schedules.count() > 0
+
+            if not is_occupied:
+                slots.append({'start': start, 'end': end})
+                start = end
+            else:
+                last_schedule = slot_schedules.last()
+                start = last_schedule.end.astimezone(None).replace(tzinfo=None)
+
+            end = start + delta
         return slots
 
     def get_availability(self, schedule_type: ScheduleType, date: str):
-        availabilities = self.availability_set.all()
         date_obj = datetime.strptime(date, '%Y-%m-%d')
+        availabilities = self.availability_set.all()
+        schedules = self.__get_schedules(date_obj)
         delta = schedule_type.get_time_delta()
         slots = []
         for availability in availabilities:
             start = datetime.combine(date_obj, availability.start)
             end = datetime.combine(date_obj, availability.end)
-            availability_slots = self.__get_slots_in_availability(start, end, delta)
+            availability_slots = self.__get_slots_in_availability(start, end, delta, schedules)
             slots.append(availability_slots)
 
         return flatten(slots)
 
     def get_schedules(self, date):
         date_obj = datetime.strptime(date, '%Y-%m-%d')
-        orders = self.order_set.filter(resource__id=self.id)
-        orders_ids = set(orders.values_list('id', flat=True))
-        schedules = Schedule.objects.filter(order__id__in=orders_ids).filter(start__date=date_obj)
+        schedules = self.__get_schedules(date_obj)
         return schedules
 
     def __str__(self):

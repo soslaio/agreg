@@ -1,5 +1,6 @@
 
 from datetime import datetime
+from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.response import Response
@@ -90,10 +91,11 @@ class ResourceViewSet(PermissionedViewset):
     def availability(request, pk=None, schedule_type_id=None):
         resources = Resource.objects.all()
         resource = get_object_or_404(resources, pk=pk)
+
         schedule_types = ScheduleType.objects.all()
         schedule_type = get_object_or_404(schedule_types, pk=schedule_type_id)
 
-        date = request.query_params.get('date', datetime.strftime(datetime.now(), '%Y-%m-%d'))
+        date = request.query_params.get('date', datetime.strftime(timezone.now(), '%Y-%m-%d'))
         availabilities = resource.get_availability(schedule_type, date)
         serializer = SlotSerializer(availabilities, many=True, context={'request': request})
         return Response(serializer.data)
@@ -102,7 +104,7 @@ class ResourceViewSet(PermissionedViewset):
     def schedules(self, request, pk=None):
         resources = Resource.objects.all()
         resource = get_object_or_404(resources, pk=pk)
-        date = request.query_params.get('date', datetime.strftime(datetime.now(), '%Y-%m-%d'))
+        date = request.query_params.get('date', datetime.strftime(timezone.now(), '%Y-%m-%d'))
         schedules = resource.get_schedules(date)
         serializer = ScheduleSummarySerializer(schedules, many=True, context={'request': request})
         return Response(serializer.data)
