@@ -90,24 +90,19 @@ class ScheduleSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    schedules = ScheduleSerializer(many=True)
-
     class Meta:
         model = Order
         fields = '__all__'
 
-    def validate_schedules(self, value):
-        print('******', value)
-        return value
-
     def create(self, validated_data):
-        schedules_data = validated_data.pop('schedules')
         order = Order.objects.create(**validated_data)
+
+        # create schedules related to order
+        schedules_data = self.initial_data.pop('schedules')
         for schedule in schedules_data:
-            serializer = ScheduleSerializer(order=order, data=schedule)
-            is_valid = serializer.is_valid()
-            print('>>>>>', is_valid)
-            print('>>>>>', serializer.data)
+            schedule['order'] = order.id
+            serializer = ScheduleSerializer(data=schedule)
+            serializer.is_valid()
             serializer.save()
-            # Schedule.objects.create(order=order, **schedule)
-        print('OrderSerializer e tals create e bla bla bla')
+
+        return order

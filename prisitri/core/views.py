@@ -30,14 +30,9 @@ class OrderViewSet(PermissionedViewset):
 
     def create(self, request):
         serializer = OrderSerializer(data=request.data)
-        is_valid = serializer.is_valid()
-
-        print(is_valid)
-        print(serializer.errors)
-        print(serializer.validated_data)
-
-        # serializer.save()
-        return Response([])
+        serializer.is_valid()
+        serializer.save()
+        return Response(serializer.data)
 
 
 class CompanyViewSet(PermissionedViewset):
