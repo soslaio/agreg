@@ -165,18 +165,14 @@ class Resource(BaseModel):
         start = availability_start
         end = start + delta
 
-        while True:
-            if end > availability_end:
-                break
-
+        while end <= availability_end:
             slot_schedules = schedules.filter(
                 Q(start__gte=start, start__lt=end) |
                 Q(end__gt=start, end__lte=end) |
                 Q(start__lt=start, end__gt=end)
             )
-            is_occupied = slot_schedules.count() > 0
 
-            if not is_occupied:
+            if not slot_schedules.count() > 0:
                 slots.append({'start': start, 'end': end})
                 start = end
             else:

@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 from .views import (CompanyViewSet, ResourceTypeViewSet, ExtendedUserViewSet, ResourceViewSet, ScheduleTypeViewSet,
-                    ApprovalGroupViewSet)
+                    ApprovalGroupViewSet, OrderViewSet)
 
 
 router = routers.DefaultRouter()
@@ -13,6 +13,7 @@ router.register('resources', ResourceViewSet, basename='resource')
 router.register('extendedusers', ExtendedUserViewSet, basename='extendeduser')
 router.register('scheduletypes', ScheduleTypeViewSet, basename='scheduletype')
 router.register('approvalgroups', ApprovalGroupViewSet, basename='approvalgroup')
+router.register('orders', OrderViewSet, basename='orders')
 
 corepatterns = [
     path('', include(router.urls)),

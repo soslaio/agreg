@@ -8,18 +8,36 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.decorators import api_view, action
 
 from .viewsets import PermissionedViewset
-from .models import Company, ResourceType, ExtendedUser, Resource, ScheduleType, ApprovalGroup
+from .models import Company, ResourceType, ExtendedUser, Resource, ScheduleType, ApprovalGroup, Order
 from .permissions import IsObjectOwnerOrAdminUser, IsRelatedToCompanyOrAdminUser
 from .serializers import (CompanySerializer, CompanySummarySerializer, ResourceTypeSummarySerializer,
                           ExtendedUserSerializer, ExtendedUserSummarySerializer, ResourceSerializer,
                           ResourceSummarySerializer, ScheduleTypeSummarySerializer, ScheduleTypeSerializer,
                           ResourceTypeSerializer, ApprovalGroupSummarySerializer, ScheduleSummarySerializer,
-                          SlotSerializer)
+                          SlotSerializer, OrderSummarySerializer, OrderSerializer)
 
 
 class ApprovalGroupViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ApprovalGroup.objects.all()
     serializer_class = ApprovalGroupSummarySerializer
+
+
+class OrderViewSet(PermissionedViewset):
+    def list(self, request):
+        queryset = Order.objects.all()
+        serializer = OrderSummarySerializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def create(self, request):
+        serializer = OrderSerializer(data=request.data)
+        is_valid = serializer.is_valid()
+
+        print(is_valid)
+        print(serializer.errors)
+        print(serializer.validated_data)
+
+        # serializer.save()
+        return Response([])
 
 
 class CompanyViewSet(PermissionedViewset):

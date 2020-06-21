@@ -1,7 +1,7 @@
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from ..models import Company, ResourceType, ExtendedUser, ApprovalGroup, ScheduleType
+from ..models import Company, ResourceType, ExtendedUser, ApprovalGroup, ScheduleType, Order, Schedule
 from .summary import (CompanySummarySerializer, ExtendedUserSummarySerializer, ResourceTypeSummarySerializer,
                       ApprovalGroupSummarySerializer)
 from .resources import ResourceSummarySerializer
@@ -81,3 +81,33 @@ class TipoRecursoSerializer(serializers.ModelSerializer):
 class SlotSerializer(serializers.Serializer):
     start = serializers.DateTimeField()
     end = serializers.DateTimeField()
+
+
+class ScheduleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Schedule
+        fields = '__all__'
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    schedules = ScheduleSerializer(many=True)
+
+    class Meta:
+        model = Order
+        fields = '__all__'
+
+    def validate_schedules(self, value):
+        print('******', value)
+        return value
+
+    def create(self, validated_data):
+        schedules_data = validated_data.pop('schedules')
+        order = Order.objects.create(**validated_data)
+        for schedule in schedules_data:
+            serializer = ScheduleSerializer(order=order, data=schedule)
+            is_valid = serializer.is_valid()
+            print('>>>>>', is_valid)
+            print('>>>>>', serializer.data)
+            serializer.save()
+            # Schedule.objects.create(order=order, **schedule)
+        print('OrderSerializer e tals create e bla bla bla')
