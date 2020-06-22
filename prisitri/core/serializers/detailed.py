@@ -82,14 +82,6 @@ class TipoRecursoSerializer(serializers.ModelSerializer):
 class SlotSerializer(serializers.Serializer):
     start = serializers.DateTimeField()
     end = serializers.DateTimeField()
-    start_iso = serializers.SerializerMethodField()
-    end_iso = serializers.SerializerMethodField()
-
-    def get_start_iso(self, obj):
-        return datetime.strftime(obj['start'], '%Y-%m-%dT%H:%M:%S')
-
-    def get_end_iso(self, obj):
-        return datetime.strftime(obj['end'], '%Y-%m-%dT%H:%M:%S')
 
 
 class ScheduleSerializer(serializers.ModelSerializer):
