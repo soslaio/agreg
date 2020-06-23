@@ -1,6 +1,7 @@
 
 from datetime import datetime
 from django.utils import timezone
+from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.response import Response
@@ -10,11 +11,11 @@ from rest_framework.decorators import api_view, action
 from .viewsets import PermissionedViewset
 from .models import Company, ResourceType, ExtendedUser, Resource, ScheduleType, ApprovalGroup, Order
 from .permissions import IsObjectOwnerOrAdminUser, IsRelatedToCompanyOrAdminUser
-from .serializers import (CompanySerializer, CompanySummarySerializer, ResourceTypeSummarySerializer,
-                          ExtendedUserSerializer, ExtendedUserSummarySerializer, ResourceSerializer,
-                          ResourceSummarySerializer, ScheduleTypeSummarySerializer, ScheduleTypeSerializer,
+from .serializers import (CompanySerializer, CompanySummarySerializer, ResourceTypeSummarySerializer, SlotSerializer,
+                          ExtendedUserSummarySerializer, ResourceSerializer, ResourceSummarySerializer, OrderSerializer,
+                          ScheduleTypeSummarySerializer, ScheduleTypeSerializer, UserFullSerializer,
                           ResourceTypeSerializer, ApprovalGroupSummarySerializer, ScheduleSummarySerializer,
-                          SlotSerializer, OrderSummarySerializer, OrderSerializer)
+                          OrderSummarySerializer, UserSummarySerializer, ExtendedUserFullSerializer)
 
 
 class ApprovalGroupViewSet(viewsets.ReadOnlyModelViewSet):
@@ -123,6 +124,24 @@ class ResourceViewSet(PermissionedViewset):
         return Response(serializer.data)
 
 
+class UserViewSet(PermissionedViewset):
+    permission_classes_by_action = {
+        'list': [IsAdminUser]
+    }
+
+    def list(self, request):
+        queryset = User.objects.all()
+        serializer = UserSummarySerializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        queryset = User.objects.all()
+        user = get_object_or_404(queryset, username=pk)
+        # self.check_object_permissions(self.request, usuario)
+        serializer = UserFullSerializer(user, context={'request': request})
+        return Response(serializer.data)
+
+
 class ExtendedUserViewSet(PermissionedViewset):
     permission_classes_by_action = {
         'list': [IsAdminUser],
@@ -138,9 +157,5 @@ class ExtendedUserViewSet(PermissionedViewset):
         queryset = ExtendedUser.objects.all()
         usuario = get_object_or_404(queryset, pk=pk)
         self.check_object_permissions(self.request, usuario)
-        serializer = ExtendedUserSerializer(usuario, context={'request': request})
+        serializer = ExtendedUserFullSerializer(usuario, context={'request': request})
         return Response(serializer.data)
-
-
-
-

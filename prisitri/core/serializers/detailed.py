@@ -1,6 +1,6 @@
 
-from datetime import datetime
 from django.contrib.auth.models import User
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from ..models import Company, ResourceType, ExtendedUser, ApprovalGroup, ScheduleType, Order, Schedule
 from .summary import (CompanySummarySerializer, ExtendedUserSummarySerializer, ResourceTypeSummarySerializer,
@@ -16,12 +16,36 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ExtendedUserSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField()
+    companies = CompanySummarySerializer(many=True)
+
+    class Meta:
+        model = ExtendedUser
+        fields = '__all__'
+
+
+class ExtendedUserFullSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField()
     user = UserSerializer()
     companies = CompanySummarySerializer(many=True)
 
     class Meta:
         model = ExtendedUser
         fields = '__all__'
+
+
+class UserFullSerializer(serializers.ModelSerializer):
+    extended_user = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        exclude = ('password',)
+
+    def get_extended_user(self, obj):
+        request = self.context['request']
+        all_extended_user = ExtendedUser.objects.all()
+        extended_user = get_object_or_404(all_extended_user, user=obj.id)
+        serializer = ExtendedUserSerializer(extended_user, context={'request': request})
+        return serializer.data
 
 
 class ScheduleTypeSerializer(serializers.ModelSerializer):
