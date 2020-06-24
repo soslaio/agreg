@@ -34,18 +34,13 @@ class CompanyAdmin(BaseAdmin):
     list_display = ('id', 'name', 'is_active')
 
 
-# @admin.register(Availability)
-# class AvailabilityAdmin(BaseAdmin):
-#     list_display = ('id', 'resource', 'start', 'end')
-
-
 @admin.register(ExtendedUser)
 class ExtendedUserAdmin(BaseAdmin):
     list_display = ('id', 'nome')
     filter_horizontal = ('companies',)
 
     def nome(self, obj):
-        return obj.nome
+        return obj.user.username
 
 
 @admin.register(Resource)
@@ -89,11 +84,3 @@ class OrderAdmin(BaseAdmin):
         return obj.approved
 
     approved.boolean = True
-
-
-# @admin.register(Schedule)
-# class ScheduleAdmin(BaseAdmin):
-#     list_display = ('id', 'order', 'start', 'end')
-#     list_filter = ('order',)
-
-
