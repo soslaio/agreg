@@ -7,7 +7,6 @@ from django.dispatch import receiver
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.contrib.admin.utils import flatten
-from django.conf import settings
 
 exposed_request = None
 
@@ -227,6 +226,10 @@ class Order(BaseModel):
         ordering = ['resource']
         verbose_name = 'Alocação'
         verbose_name_plural = 'Alocações'
+
+    @property
+    def schedules(self):
+        return self.schedule_set.all()
 
     @property
     def approved(self):

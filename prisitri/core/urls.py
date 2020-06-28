@@ -14,7 +14,7 @@ router.register('extendedusers', ExtendedUserViewSet, basename='extendeduser')
 router.register('users', UserViewSet, basename='user')
 router.register('scheduletypes', ScheduleTypeViewSet, basename='scheduletype')
 router.register('approvalgroups', ApprovalGroupViewSet, basename='approvalgroup')
-router.register('orders', OrderViewSet, basename='orders')
+router.register('orders', OrderViewSet, basename='order')
 
 corepatterns = [
     path('', include(router.urls)),

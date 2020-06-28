@@ -29,6 +29,12 @@ class OrderViewSet(PermissionedViewset):
         serializer = OrderSummarySerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
 
+    def retrieve(self, request, pk=None):
+        orders = Order.objects.all()
+        order = get_object_or_404(orders, pk=pk)
+        serializer = OrderSerializer(order, context={'request': request})
+        return Response(serializer.data)
+
     def create(self, request):
         serializer = OrderSerializer(data=request.data)
         serializer.is_valid()
@@ -159,3 +165,10 @@ class ExtendedUserViewSet(PermissionedViewset):
         self.check_object_permissions(self.request, usuario)
         serializer = ExtendedUserFullSerializer(usuario, context={'request': request})
         return Response(serializer.data)
+
+    @action(detail=True)
+    def orders(self, request, pk=None):
+        orders = Order.objects.filter(requester__id=pk)
+        serializer = OrderSummarySerializer(orders, many=True, context={'request': request})
+        return Response(serializer.data)
+

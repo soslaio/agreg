@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from ..models import Company, ResourceType, ExtendedUser, ApprovalGroup, ScheduleType, Order, Schedule
 from .summary import (CompanySummarySerializer, ExtendedUserSummarySerializer, ResourceTypeSummarySerializer,
-                      ApprovalGroupSummarySerializer)
+                      ApprovalGroupSummarySerializer, ScheduleSummarySerializer)
 from .resources import ResourceSummarySerializer
 
 
@@ -115,9 +115,15 @@ class ScheduleSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    schedules = serializers.SerializerMethodField()
+
     class Meta:
         model = Order
         fields = '__all__'
+
+    def get_schedules(self, obj):
+        serializer = ScheduleSummarySerializer(data=obj.schedules, many=True)
+        return serializer.data
 
     def create(self, validated_data):
         order = Order.objects.create(**validated_data)

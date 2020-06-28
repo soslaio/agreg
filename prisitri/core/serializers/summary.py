@@ -30,10 +30,24 @@ class ExtendedUserSummarySerializer(serializers.ModelSerializer):
         fields = ('id', 'user', 'url')
 
 
+class ResourceSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Resource
+        fields = ('id', 'resource_type', 'name', 'quantity', 'url')
+
+
 class OrderSummarySerializer(serializers.ModelSerializer):
+    resource = ResourceSummarySerializer()
+    requester = ExtendedUserSummarySerializer()
+    schedules = serializers.SerializerMethodField()
+
     class Meta:
         model = Order
-        fields = ('id', 'resource', 'requester')
+        fields = ('id', 'resource', 'requester', 'schedules', 'url')
+
+    def get_schedules(self, obj):
+        serializer = ScheduleSummarySerializer(instance=obj.schedules, many=True)
+        return serializer.data
 
 
 class CompanySummarySerializer(serializers.ModelSerializer):
