@@ -71,7 +71,7 @@ class ScheduleTypeSummarySerializer(serializers.ModelSerializer):
 class ScheduleSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = Schedule
-        fields = ('id', 'start', 'end')
+        fields = ('id', 'start', 'end', 'status')
 
 
 class ApprovalGroupSummarySerializer(serializers.ModelSerializer):

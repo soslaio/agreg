@@ -1,0 +1,1 @@
+web: gunicorn prisitri.wsgi:application --log-file -
