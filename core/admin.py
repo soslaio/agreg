@@ -45,7 +45,7 @@ class ExtendedUserAdmin(BaseAdmin):
 
 @admin.register(Resource)
 class ResourceAdmin(BaseAdmin):
-    list_display = ('id', 'name', 'resource_type', 'company', 'quantity')
+    list_display = ('id', 'name_or_rt_name', 'resource_type', 'company', 'quantity')
     filter_horizontal = ('schedule_types',)
     inlines = [AvailabilityInline]
 

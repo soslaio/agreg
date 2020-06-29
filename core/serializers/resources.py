@@ -7,6 +7,8 @@ from ..models import ScheduleType, Resource
 
 
 class ResourceSummarySerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='name_or_rt_name')
+
     class Meta:
         model = Resource
         fields = ('id', 'name', 'url')

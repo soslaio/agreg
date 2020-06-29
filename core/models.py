@@ -50,7 +50,7 @@ class BaseModel(models.Model):
 
 
 class Company(BaseModel):
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200, verbose_name='nome')
 
     class Meta:
         ordering = ['name']
@@ -75,13 +75,13 @@ class ApprovalGroup(BaseModel):
 
 class ResourceType(BaseModel):
     NATUREZAS = [
-        ('humanos', 'Recursos Humanos'),
-        ('materiais', 'Recursos Materiais')
+        ('human', 'Recursos Humanos'),
+        ('material', 'Recursos Materiais')
     ]
     company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name='empresa')
     name = models.CharField(max_length=200)
     description = models.TextField(null=True, blank=True, verbose_name='descrição')
-    nature = models.CharField(max_length=200, choices=NATUREZAS)
+    nature = models.CharField(max_length=200, choices=NATUREZAS, verbose_name='natureza')
     approval_group = models.ForeignKey(ApprovalGroup, on_delete=models.CASCADE, null=True, blank=True,
                                        verbose_name='Grupo de aprovação')
 
@@ -111,10 +111,10 @@ class ScheduleType(BaseModel):
         ('months', 'Meses'),
         ('years', 'Anos')
     ]
-    resource_type = models.ForeignKey(ResourceType, on_delete=models.CASCADE)
-    name = models.CharField(max_length=200)
-    time = models.IntegerField()
-    unit = models.CharField(max_length=200, choices=UNIDADES, default='minutes')
+    resource_type = models.ForeignKey(ResourceType, on_delete=models.CASCADE, verbose_name='tipo')
+    name = models.CharField(max_length=200, verbose_name='nome')
+    time = models.IntegerField(verbose_name='tempo')
+    unit = models.CharField(max_length=200, choices=UNIDADES, default='minutes', verbose_name='unidade')
     description = models.TextField(null=True, blank=True, verbose_name='descrição')
     available_from = models.TimeField(verbose_name='disponível de')
     available_until = models.TimeField(verbose_name='disponível até')
@@ -142,7 +142,7 @@ class ScheduleType(BaseModel):
 
 class Resource(BaseModel):
     resource_type = models.ForeignKey(ResourceType, models.CASCADE, verbose_name='tipo')
-    name = models.CharField(max_length=200, null=True, blank=True,
+    name = models.CharField(max_length=200, null=True, blank=True, verbose_name='nome',
                             help_text='No caso de recursos humanos, é o nome do profissional.')
     description = models.TextField(null=True, blank=True, verbose_name='descrição')
     quantity = models.IntegerField(default=1, verbose_name='quantidade')
@@ -200,6 +200,11 @@ class Resource(BaseModel):
         schedules = self.__get_schedules(date_obj)
         return schedules
 
+    def __name_or_rt_name(self):
+        return self.name or f'{self.resource_type.name} ({self.quantity})'
+    __name_or_rt_name.short_description = "nome"
+    name_or_rt_name = property(__name_or_rt_name)
+
     def __str__(self):
         return self.name or self.resource_type.name
 
@@ -211,6 +216,8 @@ class Availability(BaseModel):
 
     class Meta:
         ordering = ['resource', 'start']
+        verbose_name = 'Horário Disponível'
+        verbose_name_plural = 'Horários Disponíveis'
 
     def __str__(self):
         return f'{self.resource} das {self.start} às {self.end}'

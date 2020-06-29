@@ -59,7 +59,7 @@ class CompanySummarySerializer(serializers.ModelSerializer):
 class ResourceTypeSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = ResourceType
-        fields = ('id', 'name', 'url')
+        fields = ('id', 'name', 'nature', 'url')
 
 
 class ScheduleTypeSummarySerializer(serializers.ModelSerializer):

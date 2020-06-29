@@ -122,7 +122,7 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_schedules(self, obj):
-        serializer = ScheduleSummarySerializer(data=obj.schedules, many=True)
+        serializer = ScheduleSummarySerializer(instance=obj.schedules, many=True)
         return serializer.data
 
     def create(self, validated_data):
