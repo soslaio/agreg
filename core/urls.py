@@ -1,5 +1,4 @@
 
-from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 from .views import (CompanyViewSet, ResourceTypeViewSet, ExtendedUserViewSet, ResourceViewSet, ScheduleTypeViewSet,
@@ -18,7 +17,6 @@ router.register('orders', OrderViewSet, basename='order')
 
 corepatterns = [
     path('', include(router.urls)),
-    path('admin/', admin.site.urls),
     path('resources/<str:pk>/availabilities/<str:schedule_type_id>/',
          ResourceViewSet.availability, name='resources-availability')
 ]
