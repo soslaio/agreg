@@ -25,7 +25,7 @@ class ApprovalGroupViewSet(viewsets.ReadOnlyModelViewSet):
 
 class OrderViewSet(PermissionedViewset):
     def list(self, request):
-        queryset = Order.objects.all()
+        queryset = Order.objects.prefetch_related('resource', 'requester', 'schedules').all()
         serializer = OrderSummarySerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
 
@@ -97,7 +97,7 @@ class ResourceViewSet(PermissionedViewset):
     }
 
     def list(self, request):
-        queryset = Resource.objects.all()
+        queryset = Resource.objects.prefetch_related('resource_type', 'company', 'schedule_types').all()
         serializer = ResourceSummarySerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
 

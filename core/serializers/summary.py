@@ -30,7 +30,16 @@ class ExtendedUserSummarySerializer(serializers.ModelSerializer):
         fields = ('id', 'user', 'url')
 
 
+class ResourceTypeSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ResourceType
+        fields = ('id', 'name', 'nature', 'url')
+
+
 class ResourceSummarySerializer(serializers.ModelSerializer):
+    resource_type = ResourceTypeSummarySerializer()
+    name = serializers.CharField(source='name_or_rt_name')
+
     class Meta:
         model = Resource
         fields = ('id', 'resource_type', 'name', 'quantity', 'url')
@@ -54,12 +63,6 @@ class CompanySummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
         fields = ('id', 'name', 'url')
-
-
-class ResourceTypeSummarySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ResourceType
-        fields = ('id', 'name', 'nature', 'url')
 
 
 class ScheduleTypeSummarySerializer(serializers.ModelSerializer):
