@@ -84,6 +84,7 @@ class ResourceType(BaseModel):
     nature = models.CharField(max_length=200, choices=NATUREZAS, verbose_name='natureza')
     approval_group = models.ForeignKey(ApprovalGroup, on_delete=models.CASCADE, null=True, blank=True,
                                        verbose_name='Grupo de aprovação')
+    image = models.ImageField(upload_to='resource_types/', blank=True, null=True, verbose_name='imagem')
 
     class Meta:
         ordering = ['name', 'approval_group', 'company']
