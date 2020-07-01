@@ -33,7 +33,7 @@ class ExtendedUserSummarySerializer(serializers.ModelSerializer):
 class ResourceTypeSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = ResourceType
-        fields = ('id', 'name', 'nature', 'image', 'url')
+        fields = ('id', 'name', 'description', 'nature', 'image', 'url')
 
 
 class ResourceSummarySerializer(serializers.ModelSerializer):
