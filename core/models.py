@@ -15,6 +15,7 @@ class ExtendedUser(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='usuarios', verbose_name='usuário do sistema')
     companies = models.ManyToManyField('Company', blank=True, verbose_name='empresas')
+    approval_groups = models.ManyToManyField('ApprovalGroup', blank=True, verbose_name='empresas')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True, verbose_name='ativo')
@@ -24,9 +25,10 @@ class ExtendedUser(models.Model):
         verbose_name = 'Usuário'
         verbose_name_plural = 'Usuários'
 
-    @property
     def name(self):
         return self.user.get_full_name() if self.user.first_name else self.user.username
+    name.short_description = "nome"
+    name = property(name)
 
     def __str__(self):
         return self.name
@@ -51,6 +53,7 @@ class BaseModel(models.Model):
 
 class Company(BaseModel):
     name = models.CharField(max_length=200, verbose_name='nome')
+    slug = models.CharField(max_length=200, null=True, blank=True)
 
     class Meta:
         ordering = ['name']

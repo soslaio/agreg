@@ -31,16 +31,13 @@ class BaseAdmin(admin.ModelAdmin):
 
 @admin.register(Company)
 class CompanyAdmin(BaseAdmin):
-    list_display = ('id', 'name', 'is_active')
+    list_display = ('id', 'name', 'slug', 'is_active')
 
 
 @admin.register(ExtendedUser)
 class ExtendedUserAdmin(BaseAdmin):
-    list_display = ('id', 'nome')
-    filter_horizontal = ('companies',)
-
-    def nome(self, obj):
-        return obj.user.username
+    list_display = ('id', 'name')
+    filter_horizontal = ('companies', 'approval_groups')
 
 
 @admin.register(Resource)
