@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from django.db.models import Q
 from django.dispatch import receiver
 from django.contrib.auth.models import User
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.contrib.admin.utils import flatten
 
 exposed_request = None
@@ -51,8 +51,23 @@ class BaseModel(models.Model):
         super().save(*args, **kwargs)
 
 
+class CompanyType(BaseModel):
+    name = models.CharField(max_length=200, verbose_name='nome')
+    slug = models.CharField(max_length=200, null=True, blank=True)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Tipo de Empresa'
+        verbose_name_plural = 'Tipos de Empresa'
+
+    def __str__(self):
+        return self.name
+
+
 class Company(BaseModel):
     name = models.CharField(max_length=200, verbose_name='nome')
+    company_type = models.ForeignKey('CompanyType', on_delete=models.CASCADE, verbose_name='tipo de empresa')
+    logo = models.ImageField(upload_to='companies/', blank=True, null=True, verbose_name='logo')
     slug = models.CharField(max_length=200, null=True, blank=True)
 
     class Meta:
@@ -63,14 +78,27 @@ class Company(BaseModel):
         return self.name
 
 
+class Unit(BaseModel):
+    name = models.CharField(max_length=200, verbose_name='nome')
+    company = models.ForeignKey('Company', on_delete=models.CASCADE, verbose_name='empresa')
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Unidade/Filial'
+        verbose_name_plural = "Unidades/Filiais"
+
+    def __str__(self):
+        return self.name
+
+
 class ApprovalGroup(BaseModel):
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name='empresa')
+    unit = models.ForeignKey('Unit', on_delete=models.CASCADE, verbose_name='unidade')
     name = models.CharField(max_length=200, verbose_name='nome')
 
     class Meta:
         ordering = ['name']
-        verbose_name = 'Grupo de aprovação'
-        verbose_name_plural = 'Grupos de aprovação'
+        verbose_name = 'Grupo de Aprovação'
+        verbose_name_plural = 'Grupos de Aprovação'
 
     def __str__(self):
         return self.name
@@ -81,7 +109,7 @@ class ResourceType(BaseModel):
         ('human', 'Recursos Humanos'),
         ('material', 'Recursos Materiais')
     ]
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name='empresa')
+    company = models.ForeignKey('Company', on_delete=models.CASCADE, verbose_name='empresa')
     name = models.CharField(max_length=200)
     description = models.TextField(null=True, blank=True, verbose_name='descrição')
     nature = models.CharField(max_length=200, choices=NATUREZAS, verbose_name='natureza')
@@ -150,12 +178,16 @@ class Resource(BaseModel):
                             help_text='No caso de recursos humanos, é o nome do profissional.')
     description = models.TextField(null=True, blank=True, verbose_name='descrição')
     quantity = models.IntegerField(default=1, verbose_name='quantidade')
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, verbose_name='empresa')
+    company = models.ForeignKey('Company', on_delete=models.CASCADE, verbose_name='empresa')
     schedule_types = models.ManyToManyField(ScheduleType, verbose_name='tipos de alocação')
+    needs_approval = models.BooleanField(null=True, blank=True, verbose_name='necessita aprovação')
 
     class Meta:
         ordering = ['name']
         verbose_name = 'Recurso'
+
+    def get_needs_approval(self):
+        return self.needs_approval if self.needs_approval else self.resource_type.needs_approval
 
     def __get_schedules(self, date_obj):
         orders = self.order_set.all()
@@ -228,13 +260,12 @@ class Availability(BaseModel):
 
 
 class Order(BaseModel):
-    resource = models.ForeignKey(Resource, on_delete=models.CASCADE, verbose_name='recurso')
     requester = models.ForeignKey(ExtendedUser, on_delete=models.CASCADE, related_name='alocacoes',
                                   verbose_name='solicitante')
     notes = models.TextField(null=True, blank=True, verbose_name='observação')
 
     class Meta:
-        ordering = ['resource']
+        ordering = ['requester']
         verbose_name = 'Alocação'
         verbose_name_plural = 'Alocações'
 
@@ -245,29 +276,39 @@ class Order(BaseModel):
     @property
     def approved(self):
         """Informa se todas as agendas da alocação foram aprovadas"""
-        return False
+        return all([s.status == 'approved' for s in self.schedules])
 
     def __str__(self):
-        return f'{self.resource} para {self.requester.name}'
+        return f'{self.requester.name}'
 
 
 class Schedule(BaseModel):
     STATUS = [
-        ('aprovado', 'Aprovado'),
-        ('pendente', 'Pendente'),
-        ('cancelado', 'Cancelado')
+        ('approved', 'Aprovado'),
+        ('pending', 'Pendente'),
+        ('canceled', 'Cancelado')
     ]
     order = models.ForeignKey(Order, on_delete=models.CASCADE, verbose_name='alocação')
+    resource = models.ForeignKey(Resource, on_delete=models.CASCADE, verbose_name='recurso')
     start = models.DateTimeField(verbose_name='início')
     end = models.DateTimeField(verbose_name='término')
-    status = models.CharField(max_length=200, choices=STATUS)
+    status = models.CharField(max_length=200, null=True, blank=True, choices=STATUS)
 
     class Meta:
         ordering = ['order', 'start', 'end']
         verbose_name = 'Agenda'
 
+    def __resource_needs_approval(self):
+        return
+
     def __str__(self):
         return f'{self.order}: {self.start}'
+
+
+@receiver(pre_save, sender=Schedule)
+def set_schedule_status(instance, **kwargs):
+    if not instance.status:
+        instance.status = 'pending' if instance.resource.get_needs_approval() else 'approved'
 
 
 @receiver(post_save, sender=User)

@@ -1,7 +1,11 @@
 
 from django.contrib import admin
 from .models import (Company, ApprovalGroup, ResourceType, Resource, ScheduleType, Order, ExtendedUser, Schedule,
-                     Availability)
+                     Availability, CompanyType, Unit)
+
+
+admin.site.register(CompanyType)
+admin.site.register(Unit)
 
 
 class AvailabilityInline(admin.TabularInline):
@@ -31,7 +35,8 @@ class BaseAdmin(admin.ModelAdmin):
 
 @admin.register(Company)
 class CompanyAdmin(BaseAdmin):
-    list_display = ('id', 'name', 'slug', 'is_active')
+    list_display = ('id', 'name', 'company_type', 'slug', 'is_active')
+    list_filter = ('company_type', 'is_active')
 
 
 @admin.register(ExtendedUser)
@@ -46,10 +51,16 @@ class ResourceAdmin(BaseAdmin):
     filter_horizontal = ('schedule_types',)
     inlines = [AvailabilityInline]
 
+    def get_exclude(self, request, obj=None):
+        """Desativa o campo de aprovação do recurso caso o tipo de recurso não precise de aprovação"""
+        if not obj.resource_type.needs_approval:
+            self.exclude = ['needs_approval']
+        return self.exclude
+
 
 @admin.register(ApprovalGroup)
 class ApprovalGroupAdmin(BaseAdmin):
-    list_display = ('id', 'name', 'company')
+    list_display = ('id', 'name', 'unit')
 
 
 @admin.register(ResourceType)
@@ -74,10 +85,9 @@ class ScheduleTypeAdmin(BaseAdmin):
 
 @admin.register(Order)
 class OrderAdmin(BaseAdmin):
-    list_display = ('id', 'resource', 'requester', 'approved')
+    list_display = ('id', 'requester', 'approved')
     inlines = [ScheduleInline]
 
     def approved(self, obj):
         return obj.approved
-
     approved.boolean = True
