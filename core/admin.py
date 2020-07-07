@@ -39,6 +39,12 @@ class CompanyAdmin(BaseAdmin):
     list_filter = ('company_type', 'is_active')
 
 
+@admin.register(Schedule)
+class ScheduleAdmin(BaseAdmin):
+    list_display = ('id', 'resource', 'start', 'end', 'status')
+    list_filter = ('resource', 'status')
+
+
 @admin.register(ExtendedUser)
 class ExtendedUserAdmin(BaseAdmin):
     list_display = ('id', 'name')
@@ -91,3 +97,4 @@ class OrderAdmin(BaseAdmin):
     def approved(self, obj):
         return obj.approved
     approved.boolean = True
+    approved.short_description = 'aprovado?'

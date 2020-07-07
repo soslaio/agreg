@@ -274,9 +274,24 @@ class Order(BaseModel):
         return self.schedule_set.all()
 
     @property
+    def status(self):
+        statuses = [s.status for s in self.schedules]
+        if 'pending' in statuses:
+            if all([s == 'pending' for s in statuses]):
+                return 'pending'
+            return 'waiting_approval'
+
+        if 'approved' in statuses:
+            if all([s == 'approved' for s in statuses]):
+                return 'approved'
+            return 'partially_approved'
+
+        return 'canceled'
+
+    @property
     def approved(self):
         """Informa se todas as agendas da alocação foram aprovadas"""
-        return all([s.status == 'approved' for s in self.schedules])
+        return self.status == 'approved'
 
     def __str__(self):
         return f'{self.requester.name}'

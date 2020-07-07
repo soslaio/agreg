@@ -46,16 +46,16 @@ class ResourceSummarySerializer(serializers.ModelSerializer):
 
 
 class OrderSummarySerializer(serializers.ModelSerializer):
-    resource = ResourceSummarySerializer()
     requester = ExtendedUserSummarySerializer()
     schedules = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
-        fields = ('id', 'resource', 'requester', 'schedules', 'url')
+        fields = ('id', 'requester', 'schedules', 'status', 'created_at', 'url')
 
     def get_schedules(self, obj):
-        serializer = ScheduleSummarySerializer(instance=obj.schedules, many=True)
+        request = self.context['request']
+        serializer = ScheduleSummarySerializer(instance=obj.schedules, many=True, context={'request': request})
         return serializer.data
 
 
@@ -72,9 +72,11 @@ class ScheduleTypeSummarySerializer(serializers.ModelSerializer):
 
 
 class ScheduleSummarySerializer(serializers.ModelSerializer):
+    resource = ResourceSummarySerializer()
+
     class Meta:
         model = Schedule
-        fields = ('id', 'start', 'end', 'status')
+        fields = ('id', 'start', 'end', 'resource', 'status')
 
 
 class ApprovalGroupSummarySerializer(serializers.ModelSerializer):
