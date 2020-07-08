@@ -2,7 +2,7 @@
 from django.urls import path, include
 from rest_framework import routers
 from .views import (CompanyViewSet, ResourceTypeViewSet, ExtendedUserViewSet, ResourceViewSet, ScheduleTypeViewSet,
-                    ApprovalGroupViewSet, OrderViewSet, UserViewSet)
+                    ApprovalGroupViewSet, OrderViewSet, UserViewSet, CompanyTypeViewSet, UnitViewSet)
 
 
 router = routers.DefaultRouter()
@@ -14,6 +14,8 @@ router.register('users', UserViewSet, basename='user')
 router.register('scheduletypes', ScheduleTypeViewSet, basename='scheduletype')
 router.register('approvalgroups', ApprovalGroupViewSet, basename='approvalgroup')
 router.register('orders', OrderViewSet, basename='order')
+router.register('companytypes', CompanyTypeViewSet, basename='companytype')
+router.register('units', UnitViewSet, basename='unit')
 
 corepatterns = [
     path('', include(router.urls)),

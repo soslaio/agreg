@@ -9,13 +9,14 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.decorators import api_view, action
 
 from .viewsets import PermissionedViewset
-from .models import Company, ResourceType, ExtendedUser, Resource, ScheduleType, ApprovalGroup, Order
+from .models import Company, ResourceType, ExtendedUser, Resource, ScheduleType, ApprovalGroup, Order, CompanyType, Unit
 from .permissions import IsObjectOwnerOrAdminUser, IsRelatedToCompanyOrAdminUser
 from .serializers import (CompanySerializer, CompanySummarySerializer, ResourceTypeSummarySerializer, SlotSerializer,
                           ExtendedUserSummarySerializer, ResourceSerializer, ResourceSummarySerializer, OrderSerializer,
                           ScheduleTypeSummarySerializer, ScheduleTypeSerializer, UserFullSerializer,
                           ResourceTypeSerializer, ApprovalGroupSummarySerializer, ScheduleSummarySerializer,
-                          OrderSummarySerializer, UserSummarySerializer, ExtendedUserFullSerializer)
+                          OrderSummarySerializer, UserSummarySerializer, ExtendedUserFullSerializer,
+                          CompanyTypeSummarySerializer, UnitSummarySerializer)
 
 
 class ApprovalGroupViewSet(viewsets.ReadOnlyModelViewSet):
@@ -40,6 +41,16 @@ class OrderViewSet(PermissionedViewset):
         serializer.is_valid()
         serializer.save()
         return Response(serializer.data)
+
+
+class CompanyTypeViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = CompanyType.objects.all()
+    serializer_class = CompanyTypeSummarySerializer
+
+
+class UnitViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Unit.objects.all()
+    serializer_class = UnitSummarySerializer
 
 
 class CompanyViewSet(PermissionedViewset):

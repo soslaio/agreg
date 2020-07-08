@@ -2,9 +2,10 @@
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from ..models import Company, ResourceType, ExtendedUser, ApprovalGroup, ScheduleType, Order, Schedule
+from ..models import (Company, ResourceType, ExtendedUser, ApprovalGroup, ScheduleType, Order, Schedule, CompanyType)
 from .summary import (CompanySummarySerializer, ExtendedUserSummarySerializer, ResourceTypeSummarySerializer,
-                      ApprovalGroupSummarySerializer, ScheduleSummarySerializer)
+                      ApprovalGroupSummarySerializer, ScheduleSummarySerializer, CompanyTypeSummarySerializer,
+                      UnitSummarySerializer)
 from .resources import ResourceSummarySerializer
 
 
@@ -74,19 +75,21 @@ class ResourceTypeSerializer(serializers.ModelSerializer):
         return serializer.data
 
 
+class CompanyTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompanyType
+        fields = '__all__'
+
+
 class CompanySerializer(serializers.ModelSerializer):
     owner = ExtendedUserSummarySerializer()
-    resource_types = serializers.SerializerMethodField()
+    resource_types = ResourceTypeSummarySerializer(many=True)
+    company_type = CompanyTypeSummarySerializer()
+    units = UnitSummarySerializer(many=True)
 
     class Meta:
         model = Company
         fields = '__all__'
-
-    def get_resource_types(self, obj):
-        types = obj.resourcetype_set.all()
-        request = self.context['request']
-        serializer = ResourceTypeSummarySerializer(types, many=True, context={'request': request})
-        return serializer.data
 
 
 class ApprovalGroupSerializer(serializers.ModelSerializer):

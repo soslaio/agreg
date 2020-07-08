@@ -75,6 +75,14 @@ class Company(BaseModel):
         ordering = ['name']
         verbose_name = 'Empresa'
 
+    @property
+    def resource_types(self):
+        return self.resourcetype_set.all()
+
+    @property
+    def units(self):
+        return self.unit_set.all()
+
     def __str__(self):
         return self.name
 

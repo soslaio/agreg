@@ -2,7 +2,8 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework.reverse import reverse
-from ..models import Company, ResourceType, ExtendedUser, ApprovalGroup, ScheduleType, Resource, Order, Schedule
+from ..models import Company, ResourceType, ExtendedUser, ApprovalGroup, ScheduleType, Resource, Order, Schedule,\
+    CompanyType, Unit
 
 
 class UserSummarySerializer(serializers.ModelSerializer):
@@ -33,7 +34,8 @@ class ExtendedUserSummarySerializer(serializers.ModelSerializer):
 class ResourceTypeSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = ResourceType
-        fields = ('id', 'name', 'description', 'nature', 'image', 'url')
+        # fields = ('id', 'name', 'description', 'nature', 'image', 'url')
+        fields = ('id', 'name', 'url')
 
 
 class ResourceSummarySerializer(serializers.ModelSerializer):
@@ -57,6 +59,18 @@ class OrderSummarySerializer(serializers.ModelSerializer):
         request = self.context['request']
         serializer = ScheduleSummarySerializer(instance=obj.schedules, many=True, context={'request': request})
         return serializer.data
+
+
+class UnitSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Unit
+        fields = ('id', 'name', 'url')
+
+
+class CompanyTypeSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompanyType
+        fields = ('id', 'name', 'url')
 
 
 class CompanySummarySerializer(serializers.ModelSerializer):
