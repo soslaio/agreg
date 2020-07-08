@@ -7,6 +7,7 @@ from django.dispatch import receiver
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save, pre_save
 from django.contrib.admin.utils import flatten
+from multiselectfield import MultiSelectField
 
 exposed_request = None
 
@@ -246,7 +247,17 @@ class Resource(BaseModel):
 
 
 class Availability(BaseModel):
+    WEEKDAYS = [
+        (0, 'Domingo'),
+        (1, 'Segunda'),
+        (2, 'Terça'),
+        (3, 'Quarta'),
+        (4, 'Quinta'),
+        (5, 'Sexta'),
+        (6, 'Sábado')
+    ]
     resource = models.ForeignKey(Resource, on_delete=models.CASCADE, verbose_name='recurso')
+    weekdays = MultiSelectField(choices=WEEKDAYS, default=[1, 2, 3, 4, 5], verbose_name='dias da semana')
     start = models.TimeField(verbose_name='início')
     end = models.TimeField(verbose_name='término')
 

@@ -9,6 +9,7 @@ admin.site.register(Unit)
 
 
 class AvailabilityInline(admin.TabularInline):
+    extra = 1
     model = Availability
     exclude = ('owner', 'is_active')
 
@@ -59,7 +60,7 @@ class ResourceAdmin(BaseAdmin):
 
     def get_exclude(self, request, obj=None):
         """Desativa o campo de aprovação do recurso caso o tipo de recurso não precise de aprovação"""
-        if not obj.resource_type.needs_approval:
+        if obj and not obj.resource_type.needs_approval:
             self.exclude = ['needs_approval']
         return self.exclude
 
