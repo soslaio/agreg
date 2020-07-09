@@ -2,7 +2,8 @@
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from ..models import (Company, ResourceType, ExtendedUser, ApprovalGroup, ScheduleType, Order, Schedule, CompanyType)
+from ..models import (Company, ResourceType, ExtendedUser, ApprovalGroup, ScheduleType, Order, Schedule, CompanyType,
+                      Unit)
 from .summary import (CompanySummarySerializer, ExtendedUserSummarySerializer, ResourceTypeSummarySerializer,
                       ApprovalGroupSummarySerializer, ScheduleSummarySerializer, CompanyTypeSummarySerializer,
                       UnitSummarySerializer)
@@ -95,6 +96,16 @@ class CompanySerializer(serializers.ModelSerializer):
 class ApprovalGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApprovalGroup
+        fields = '__all__'
+
+
+class UnitSerializer(serializers.ModelSerializer):
+    resources = ResourceSummarySerializer(many=True)
+    owner = ExtendedUserSummarySerializer()
+    company = CompanySummarySerializer()
+
+    class Meta:
+        model = Unit
         fields = '__all__'
 
 

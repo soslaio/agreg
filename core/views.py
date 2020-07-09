@@ -16,7 +16,7 @@ from .serializers import (CompanySerializer, CompanySummarySerializer, ResourceT
                           ScheduleTypeSummarySerializer, ScheduleTypeSerializer, UserFullSerializer,
                           ResourceTypeSerializer, ApprovalGroupSummarySerializer, ScheduleSummarySerializer,
                           OrderSummarySerializer, UserSummarySerializer, ExtendedUserFullSerializer,
-                          CompanyTypeSummarySerializer, UnitSummarySerializer)
+                          CompanyTypeSummarySerializer, UnitSummarySerializer, UnitSerializer)
 
 
 class ApprovalGroupViewSet(viewsets.ReadOnlyModelViewSet):
@@ -48,9 +48,17 @@ class CompanyTypeViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CompanyTypeSummarySerializer
 
 
-class UnitViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Unit.objects.all()
-    serializer_class = UnitSummarySerializer
+class UnitViewSet(PermissionedViewset):
+    def list(self, request):
+        queryset = Unit.objects.prefetch_related('company').all()
+        serializer = UnitSummarySerializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        units = Unit.objects.prefetch_related('company').all()
+        unit = get_object_or_404(units, pk=pk)
+        serializer = UnitSerializer(unit, context={'request': request})
+        return Response(serializer.data)
 
 
 class CompanyViewSet(PermissionedViewset):
@@ -60,7 +68,7 @@ class CompanyViewSet(PermissionedViewset):
     }
 
     def list(self, request):
-        queryset = Company.objects.all()
+        queryset = Company.objects.prefetch_related('company_type').all()
         serializer = CompanySummarySerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
 
@@ -74,7 +82,7 @@ class CompanyViewSet(PermissionedViewset):
 
 class ResourceTypeViewSet(PermissionedViewset):
     def list(self, request):
-        resource_types = ResourceType.objects.all()
+        resource_types = ResourceType.prefetch_related('company').objects.all()
         serializer = ResourceTypeSummarySerializer(resource_types, many=True, context={'request': request})
         return Response(serializer.data)
 

@@ -96,6 +96,10 @@ class Unit(BaseModel):
         verbose_name = 'Unidade/Filial'
         verbose_name_plural = "Unidades/Filiais"
 
+    @property
+    def resources(self):
+        return self.resource_set.all()
+
     def __str__(self):
         return self.name
 
@@ -187,7 +191,7 @@ class Resource(BaseModel):
                             help_text='No caso de recursos humanos, é o nome do profissional.')
     description = models.TextField(null=True, blank=True, verbose_name='descrição')
     quantity = models.IntegerField(default=1, verbose_name='quantidade')
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, verbose_name='empresa')
+    unit = models.ForeignKey('Unit', on_delete=models.CASCADE, verbose_name='unidade')
     schedule_types = models.ManyToManyField(ScheduleType, verbose_name='tipos de alocação')
     needs_approval = models.BooleanField(null=True, blank=True, verbose_name='necessita aprovação')
 
