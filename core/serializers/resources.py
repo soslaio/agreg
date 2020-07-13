@@ -2,7 +2,7 @@
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
-from .summary import CompanySummarySerializer, ResourceTypeSummarySerializer, ExtendedUserSummarySerializer
+from .summary import UnitSummarySerializer, ResourceTypeSummarySerializer, ExtendedUserSummarySerializer
 from ..models import ScheduleType, Resource
 
 
@@ -30,7 +30,7 @@ class ResourceScheduleTypeSerializer(serializers.ModelSerializer):
 
 class ResourceSerializer(serializers.ModelSerializer):
     schedule_types = serializers.SerializerMethodField()
-    company = CompanySummarySerializer()
+    unit = UnitSummarySerializer()
     resource_type = ResourceTypeSummarySerializer()
     owner = ExtendedUserSummarySerializer()
 
