@@ -100,6 +100,12 @@ class Unit(BaseModel):
     def resources(self):
         return self.resource_set.all()
 
+    @property
+    def resource_types(self):
+        resource_types_ids = set(self.resources.values_list('resource_type', flat=True))
+        resource_types = ResourceType.objects.filter(pk__in=resource_types_ids)
+        return resource_types
+
     def __str__(self):
         return self.name
 

@@ -100,9 +100,10 @@ class ApprovalGroupSerializer(serializers.ModelSerializer):
 
 
 class UnitSerializer(serializers.ModelSerializer):
-    resources = ResourceSummarySerializer(many=True)
+    # resources = ResourceSummarySerializer(many=True)
     owner = ExtendedUserSummarySerializer()
     company = CompanySummarySerializer()
+    resource_types = ResourceTypeSummarySerializer(many=True)
 
     class Meta:
         model = Unit

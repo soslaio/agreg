@@ -35,7 +35,7 @@ class ResourceTypeSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = ResourceType
         # fields = ('id', 'name', 'description', 'nature', 'image', 'url')
-        fields = ('id', 'name', 'url')
+        fields = ('id', 'name', 'image', 'url')
 
 
 class ResourceSummarySerializer(serializers.ModelSerializer):
