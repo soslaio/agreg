@@ -1,7 +1,18 @@
 
 from django.contrib import admin
-from .models import (Company, ApprovalGroup, ResourceType, Resource, ScheduleType, Order, ExtendedUser, Schedule,
-                     Availability, CompanyType, Unit)
+from .models import (
+    Company,
+    ApprovalGroup,
+    ResourceType,
+    Resource,
+    ScheduleType,
+    Order,
+    ExtendedUser,
+    Schedule,
+    Availability,
+    CompanyType,
+    Unit
+)
 
 
 admin.site.register(CompanyType)
